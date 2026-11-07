@@ -24,7 +24,7 @@
         p { font-size: 14px; color: #e0e0e0; margin-bottom: 40px; }
         .mic-btn {
             width: 120px; height: 120px; border-radius: 50%; background: #ffffff; border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); cursor: pointer; outline: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer; outline: none;
             transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;
         }
         .mic-btn:active { transform: scale(0.95); }
@@ -34,12 +34,6 @@
         .mic-btn.recording .mic-icon, .mic-btn.confirming .mic-icon { fill: #ffffff; }
         #status { font-size: 16px; margin-top: 30px; min-height: 24px; font-weight: 500; color: #00ffcc; }
         #result { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; font-size: 15px; min-height: 40px; text-align: left; }
-        
-        .btn-group { display: none; margin-top: 20px; justify-content: space-around; width: 100%; }
-        .action-btn { padding: 12px 25px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; width: 45%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .btn-yes { background: #00ffcc; color: #1e3c72; }
-        .btn-no { background: #ff4757; color: #ffffff; }
-        
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
             70% { box-shadow: 0 0 0 20px rgba(255, 71, 87, 0); }
@@ -63,221 +57,181 @@
     </button>
     <div id="status">準備就緒</div>
     <div id="result">識別結果與解析會顯示在這裡...</div>
-    
-    <div class="btn-group" id="btnGroup">
-        <button class="action-btn btn-yes" id="btnYes">對，沒錯</button>
-        <button class="action-btn btn-no" id="btnNo">不對，取消</button>
-    </div>
 </div>
-
 <script>
-    // 🔗 GAS 部署網址（已保留您原本的 Web App URL）
+    // ⚠️ 請填入您專屬的 Google Apps Script 網頁應用程式網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHkvhdCOh3s834JA35-v44hMQvvcxagEjLuxiyVjeQAqfsow1Zq2c32zUl1XyBJPIMTg/exec";
 
     const micButton = document.getElementById('micButton');
     const statusText = document.getElementById('status');
     const resultText = document.getElementById('result');
     const subTitle = document.getElementById('subTitle');
-    const btnGroup = document.getElementById('btnGroup');
-    const btnYes = document.getElementById('btnYes');
-    const btnNo = document.getElementById('btnNo');
     
     let recognition; 
-    let isRecording = false; 
-    let isConfirmStage = false; 
-    let savedPendingData = null;
+    let isRecording = false;
+    let isConfirmStage = false; // 是否處於確認階段
+    let savedPendingData = null; // 暫存解析好的資料
 
-    // 觸發音訊上下文的初始化，解決 iOS/Chrome 語音播放鎖定問題
-    function initSynth() {
-        if ('speechSynthesis' in window) {
-            const u = new SpeechSynthesisUtterance('');
-            window.speechSynthesis.speak(u);
-        }
-    }
-
-    // 🔥 【修復衝突點】單純主動向手機申請麥克風權限，不進行過早的 Stop 軌道中斷
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-            console.log("麥克風硬體權限驗證通過");
-            // 修正：不手動執行 track.stop()，讓網頁原生語音套件後續能順利取得音訊流
-        })
-        .catch(function(err) {
-            console.error("麥克風請求錯誤:", err);
-            statusText.innerText = "❌ 麥克風被拒絕，請檢查瀏覽器或網頁覆蓋層權限設定。";
-            statusText.style.color = "#ff4757";
-        });
-    }
-
-    // 初始化語音辨識
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition(); 
         recognition.continuous = false; 
         recognition.lang = 'zh-TW';
-        recognition.interimResults = false;
 
         recognition.onstart = () => { 
             isRecording = true; 
             if (isConfirmStage) {
-                micButton.classList.add('confirming'); 
-                statusText.innerText = "請回答「對」或「不對」，也可以直接點擊按鈕...";
+                micButton.classList.add('confirming');
+                statusText.innerText = "請回答「對」或「不對」...";
             } else {
                 micButton.classList.add('recording'); 
                 statusText.innerText = "正在聆聽中，請說話..."; 
             }
         };
-
+        
         recognition.onend = () => { 
             isRecording = false; 
-            micButton.classList.remove('recording'); 
-            micButton.classList.remove('confirming'); 
+            micButton.classList.remove('recording');
+            micButton.classList.remove('confirming');
         };
-
+        
         recognition.onresult = (event) => { 
             const text = event.results[0][0].transcript.trim(); 
-            if (isConfirmStage) { 
-                handleConfirmation(text); 
-            } else { 
+            
+            if (isConfirmStage) {
+                // 第二階段：確認對話
+                handleConfirmation(text);
+            } else {
+                // 第一階段：接收指令
                 resultText.innerText = "聽到指令：" + text; 
                 parseCommand(text); 
             }
         };
-
-        recognition.onerror = (event) => { 
-            console.error("語音辨識錯誤:", event.error);
-            statusText.innerText = "❌ 語音出錯: " + event.error + "，請重試。"; 
-            resetToInitial(); 
+        
+        recognition.onerror = () => { 
+            statusText.innerText = "語音識別出錯，請再試一次"; 
+            resetToInitial();
         };
     } else { 
         statusText.innerText = "瀏覽器不支援語音辨識"; 
         micButton.style.display = 'none'; 
     }
 
-    // 麥克風點擊事件
     micButton.addEventListener('click', () => { 
-        initSynth();
         if (isRecording) { 
             recognition.stop(); 
         } else { 
-            try {
-                recognition.start(); 
-            } catch(e) {
-                console.error("啟動辨識失敗，嘗試重新修復:", e);
-                // 防止因重複 start 導致衝突
-                recognition.stop();
-                setTimeout(() => recognition.start(), 200);
-            }
+            recognition.start(); 
         } 
     });
 
-    // 實體按鈕點擊事件
-    btnYes.addEventListener('click', () => { handleConfirmation("對"); });
-    btnNo.addEventListener('click', () => { handleConfirmation("不對"); });
-
-    // 語音播放系統
+    // 讓手機開口說話的函數
     function speak(message, callback) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // 停止之前還沒說完的話
             const utterance = new SpeechSynthesisUtterance(message);
-            utterance.lang = 'zh-TW'; 
-            utterance.rate = 1.1;
-            if (callback) { utterance.onend = callback; }
+            utterance.lang = 'zh-TW';
+            utterance.rate = 1.0;
+            if (callback) {
+                utterance.onend = callback;
+            }
             window.speechSynthesis.speak(utterance);
-        } else if (callback) { 
-            callback(); 
+        } else if (callback) {
+            callback();
         }
     }
 
-    // 🌟 記帳核心解析邏輯（補全並增強）
     function parseCommand(text) {
         statusText.innerText = "AI 正在分析語意...";
         let pendingData = null;
 
-        // 規則 A：判斷是否為記帳/消費指令
-        if (text.includes("花") || text.includes("買") || text.includes("元") || text.includes("塊") || text.includes("吃")) {
+        if (text.includes("花") || text.includes("買") || text.includes("元") || text.includes("塊")) {
             const amountMatch = text.match(/\d+/);
             if (amountMatch) {
                 const amount = amountMatch[0];
-                // 剔除數字、單位及時間關鍵字，提煉出消費項目
-                const content = text.replace(amount, "").replace(/元|塊|今日|今天|吃了|買了/g, "").trim();
-                pendingData = { 
-                    type: 'accounting', 
-                    mode: 'expense', 
-                    content: content || "日常花費", 
-                    amount: amount, 
-                    rawText: text 
-                };
+                const content = text.replace(amount, "").replace(/元|塊|今日|今天/g, "").trim();
+                pendingData = { mode: 'expense', content: content || "日常花費", amount: amount, rawText: text };
             }
-        } 
+        }
+        else if (text.includes("提醒") || text.includes("叫我")) {
+            let dateStr = new Date().toISOString().split('T')[0];
+            let timeStr = "09:00";
+            
+            const dateMatch = text.match(/(\d+)月(\d+)號?/);
+            if (dateMatch) {
+                const currentYear = new Date().getFullYear();
+                dateStr = `${currentYear}-${dateMatch[1].padStart(2, '0')}-${dateMatch[2].padStart(2, '0')}`;
+            } else if (text.includes("明天")) {
+                const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+                dateStr = tomorrow.toISOString().split('T')[0];
+            }
+            
+            const timeMatch = text.match(/(\d+)點(\d+)?/);
+            if (timeMatch) {
+                let hour = parseInt(timeMatch[1]);
+                let minute = timeMatch[2] ? timeMatch[2] : "00";
+                if ((text.includes("下午") || text.includes("晚上") || text.includes("pm") || text.includes("PM")) && hour < 12) {
+                    hour += 12;
+                }
+                timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            }
+            pendingData = { mode: 'reminder', content: text, date: dateStr, time: timeStr, rawText: text };
+        }
 
-        // 判斷解析結果
-        if (pendingData && pendingData.type === 'accounting') {
+        if (pendingData) {
             savedPendingData = pendingData;
             isConfirmStage = true;
-            btnGroup.style.display = 'flex';
+            statusText.innerText = "🔊 正在語音確認中...";
             
-            const askMsg = `幫您記帳：${savedPendingData.content}，${savedPendingData.amount}元。請問正確嗎？`;
-            resultText.innerHTML = `<strong>解析成功 📊</strong><br>項目：${savedPendingData.content}<br>金額：${savedPendingData.amount} 元`;
-            statusText.innerText = "等待確認中...";
-            
+            // 語音詢問確認
+            const askMsg = `確認內容，請問是要記錄：${text}，對嗎？`;
             speak(askMsg, () => {
-                // 語音詢問完畢後自動重開麥克風引導使用者說「對」或「不對」
-                if (!isRecording) recognition.start();
+                // 說完話後，自動啟動第二階段錄音聆聽「對」或「不對」
+                if (!isRecording) {
+                    recognition.start();
+                }
             });
         } else {
-            statusText.innerText = "⚠️ 無法解析記帳資訊，請再試一次（例如：晚餐吃牛肉麵150元）";
-            speak("我沒聽懂記帳內容，請再試一次");
-            resetToInitial();
+            statusText.innerText = "❌ 無法辨識指令，請重新說一次。";
+            speak("抱歉，我沒有聽懂，請重新說一次。");
         }
     }
 
-    // 🌟 處理二次語音/按鈕確認邏輯
-    function handleConfirmation(reply) {
-        if (reply.includes("對") || reply.includes("正確") || reply.includes("是")) {
-            statusText.innerText = "🚀 正在同步寫入 Google 試算表...";
-            btnGroup.style.display = 'none';
-            
-            // 封裝發送給 GAS 的 Data
-            const postData = {
-                action: "addExpense", // 對應您 GAS 中的 function 判斷
-                content: savedPendingData.content,
-                amount: savedPendingData.amount,
-                rawText: savedPendingData.rawText
-            };
-// 使用 fetch 傳送資料到 Google Apps Script
-fetch(GAS_WEB_APP_URL, {
-method: "POST",
-mode: "no-cors", // 防止跨域報錯
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify(postData)
-})
-.then(() => {
-statusText.innerText = "✅ 記帳成功！已同步至雲端試算表。";
-resultText.innerText = 已成功記錄：${savedPendingData.content} ${savedPendingData.amount}元;
-speak("記帳成功", () => { resetToInitial(); });
-})
-.catch(err => {
-console.error("同步失敗:", err);
-statusText.innerText = "❌ 寫入雲端失敗，請檢查網路或 GAS 網址";
-speak("寫入失敗");
-resetToInitial();
-});
-} else if (reply.includes("不對") || reply.includes("取消") || reply.includes("錯誤")) {
-statusText.innerText = "已取消本次記帳。";
-resultText.innerText = "指令已取消。";
-speak("好的，已取消", () => { resetToInitial(); });
-} else {
-statusText.innerText = "未能辨識確認指令，請點選按鈕或重新回答。";
-}
-}
-// 重置回初始狀態
-function resetToInitial() {
-isConfirmStage = false;
-savedPendingData = null;
-btnGroup.style.display = 'none';
-setTimeout(() => {
-statusText.innerText = "準備就緒";
-statusText.style.color = "#00ffcc";
-}, 2000);
-}
+    function handleConfirmation(text) {
+        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好")) {
+            statusText.innerText = "🚀 確認正確，正在同步至雲端...";
+            speak("收到，正在幫您寫入文件。");
+            sendToGas(savedPendingData);
+        } else {
+            statusText.innerText = "❌ 已取消記錄。";
+            speak("好的，已幫您取消，請重新點擊按鈕錄製。", () => {
+                resetToInitial();
+            });
+        }
+    }
+
+    function resetToInitial() {
+        isConfirmStage = false;
+        savedPendingData = null;
+        statusText.innerText = "準備就緒";
+        subTitle.innerText = "點擊麥克風後開始說話...";
+    }
+
+    function sendToGas(data) {
+        fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(() => {
+            statusText.innerText = "✅ 處理完成！已成功存入文件。";
+            resultText.innerText = `[已記錄]\n類型: ${data.mode === 'expense' ? '記帳' : '提醒事項'}\n內容: ${data.content}`;
+            speak("已成功存入文件，大功告成。");
+            isConfirmStage = false;
+            savedPendingData = null;
+        }).catch(err => { 
+            statusText.innerText = "❌ 傳送失敗"; 
+            speak("糟糕，傳送失敗了。");
+            console.error(err); 
+            resetToInitial();
+        });
+    }
+</script>
+</body>
+</html>
