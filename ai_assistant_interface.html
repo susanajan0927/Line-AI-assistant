@@ -35,7 +35,6 @@
         #status { font-size: 16px; margin-top: 30px; min-height: 24px; font-weight: 500; color: #00ffcc; }
         #result { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; font-size: 15px; min-height: 40px; text-align: left; }
         
-        /* 雙重保障實體按鈕區 */
         .btn-group { display: none; margin-top: 20px; justify-content: space-around; width: 100%; }
         .action-btn { padding: 12px 25px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; width: 45%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .btn-yes { background: #00ffcc; color: #1e3c72; }
@@ -65,14 +64,13 @@
     <div id="status">準備就緒</div>
     <div id="result">識別結果與解析會顯示在這裡...</div>
     
-    <!-- 按鈕群組 -->
     <div class="btn-group" id="btnGroup">
         <button class="action-btn btn-yes" id="btnYes">對，沒錯</button>
         <button class="action-btn btn-no" id="btnNo">不對，取消</button>
     </div>
 </div>
 <script>
-    // 🔗 已經填入正確的 Google Apps Script 應用程式網址
+    // 🔗 請務必確認這裡的 Google Apps Script 網址是否為最新部署的版本
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHkvhdCOh3s834JA35-v44hMQvvcxagEjLuxiyVjeQAqfsow1Zq2c32zUl1XyBJPIMTg/exec";
 
     const micButton = document.getElementById('micButton');
@@ -85,12 +83,25 @@
     
     let recognition; let isRecording = false; let isConfirmStage = false; let savedPendingData = null;
 
-    // 主動喚醒手機的播音引擎（防止瀏覽器預設靜音）
     function initSynth() {
         if ('speechSynthesis' in window) {
             const u = new SpeechSynthesisUtterance('');
             window.speechSynthesis.speak(u);
         }
+    }
+
+    // 主動向手機申請麥克風硬體權限
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            console.log("麥克風硬體權限已核准");
+            // 釋放串流防止佔用
+            stream.getTracks().forEach(track => track.stop());
+        })
+        .catch(function(err) {
+            statusText.innerText = "❌ 麥克風被系統拒絕，請至手機設定允許瀏覽器取用麥克風。";
+            statusText.style.color = "#ff4757";
+        });
     }
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -103,8 +114,7 @@
                 micButton.classList.add('confirming'); 
                 statusText.innerText = "請回答「對」或「不對」，也可以直接點擊按鈕...";
             } else {
-                micButton.classList.add('recording'); 
-                statusText.innerText = "正在聆聽中，請說話..."; 
+                micButton.classList.add('recording'); statusText.innerText = "正在聆聽中，請說話..."; 
             }
         };
         recognition.onend = () => { isRecording = false; micButton.classList.remove('recording'); micButton.classList.remove('confirming'); };
@@ -112,15 +122,17 @@
             const text = event.results[0][0].transcript.trim(); 
             if (isConfirmStage) { handleConfirmation(text); } else { resultText.innerText = "聽到指令：" + text; parseCommand(text); }
         };
-        recognition.onerror = () => { statusText.innerText = "語音識別出錯，請再試一次"; resetToInitial(); };
+        recognition.onerror = (event) => { 
+            statusText.innerText = "❌ 語音出錯: " + event.error + "，請重開網頁再試一次"; 
+            resetToInitial(); 
+        };
     } else { statusText.innerText = "瀏覽器不支援語音辨識"; micButton.style.display = 'none'; }
 
     micButton.addEventListener('click', () => { 
-        initSynth(); // 點擊時解鎖聲音
+        initSynth();
         if (isRecording) { recognition.stop(); } else { recognition.start(); } 
     });
 
-    // 實體按鈕點擊
     btnYes.addEventListener('click', () => { handleConfirmation("對"); });
     btnNo.addEventListener('click', () => { handleConfirmation("不對"); });
 
@@ -190,14 +202,14 @@
     }
 
     function sendToGas(data) {
-        fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-        .then(() => {
-            statusText.innerText = "✅ 處理完成！已成功存入文件。";
-            resultText.innerText = `[已記錄]\n類型: ${data.mode === 'expense' ? '記帳' : '提醒事項'}\n內容: ${data.content}`;
-            speak("已成功儲存。"); resetToInitial();
-        }).catch(err => { 
-            statusText.innerText = "❌ 傳送失敗"; 
-            speak("傳送失敗。"); 
+fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+.then(() => {
+statusText.innerText = "✅ 處理完成！已成功存入文件。";
+resultText.innerText = [已記錄]\n類型: ${data.mode === 'expense' ? '記帳' : '提醒事項'}\n內容: ${data.content};
+speak("已成功儲存。"); resetToInitial();
+}).catch(err => {
+statusText.innerText = "❌ 傳送失敗";
+speak("傳送失敗。");
 console.error(err);
 resetToInitial();
 });
