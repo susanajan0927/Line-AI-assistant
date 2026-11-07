@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 語音智慧助手</title>
+    <link rel="apple-touch-icon" href="https://flaticon.com">
+    <link rel="icon" href="https://flaticon.com">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container { text-align: center; padding: 20px; width: 90%; max-width: 400px; }
+        h1 { font-size: 24px; margin-bottom: 5px; font-weight: 600; }
+        p { font-size: 14px; color: #e0e0e0; margin-bottom: 40px; }
+        .mic-btn {
+            width: 120px; height: 120px; border-radius: 50%; background: #ffffff; border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer; outline: none;
+            transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.recording { animation: pulse 1.5s infinite; background: #ff4757; }
+        .mic-icon { width: 50px; height: 50px; fill: #2a5298; transition: fill 0.3s; }
+        .mic-btn.recording .mic-icon { fill: #ffffff; }
+        #status { font-size: 16px; margin-top: 30px; min-height: 24px; font-weight: 500; color: #00ffcc; }
+        #result { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; font-size: 15px; min-height: 40px; text-align: left; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 71, 87, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>AI 語音智慧助手</h1>
+    <p>點擊麥克風後開始說話...</p>
+    <button class="mic-btn" id="micButton">
+        <svg class="mic-icon" viewBox="0 0 24 24">
+            <path d="M12,14c1.66,0,3-1.34,3-3V5c0-1.66-1.34-3-3-3S9,3.34,9,5v6C9,12.66,10.34,14,12,14z M17,11c0,2.76-2.24,5-5,5s-5-2.24-5-5H5c0,3.53,2.61,6.43,6,6.92V21h2v-3.08c3.39-0.49,6-3.39,6-6.92H17z"/>
+        </svg>
+    </button>
+    <div id="status">準備就緒</div>
+    <div id="result">識別結果與解析會顯示在這裡...</div>
+</div>
+<script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHkvhdCOh3s834JA35-v44hMQvvcxagEjLuxiyVjeQAqfsow1Zq2c32zUl1XyBJPIMTg/exec";
+    const micButton = document.getElementById('micButton');
+    const statusText = document.getElementById('status');
+    const resultText = document.getElementById('result');
+    let recognition; let isRecording = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition(); recognition.continuous = false; recognition.lang = 'zh-TW';
+
+        recognition.onstart = () => { isRecording = true; micButton.classList.add('recording'); statusText.innerText = "正在聆聽中，請說話..."; };
+        recognition.onend = () => { isRecording = false; micButton.classList.remove('recording'); };
+        recognition.onresult = (event) => { const text = event.results[0][0].transcript; resultText.innerText = "聽到指令：" + text; parseCommand(text); };
+        recognition.onerror = () => { statusText.innerText = "語音識別出錯，請再試一次"; };
+    } else { statusText.innerText = "瀏覽器不支援語音辨識"; micButton.style.display = 'none'; }
+
+    micButton.addEventListener('click', () => { if (isRecording) { recognition.stop(); } else { recognition.start(); } });
+
+    function parseCommand(text) {
+        statusText.innerText = "AI 正在分析語意...";
+        if (text.includes("花") || text.includes("買") || text.includes("元") || text.includes("塊")) {
+            const amountMatch = text.match(/\d+/);
+            if (amountMatch) {
+                const amount = amountMatch[0];
+                const content = text.replace(amount, "").replace(/元|塊|今日|今天/g, "").trim();
+                sendToGas({ mode: 'expense', content: content || "日常花費", amount: amount });
+                return;
+            }
+        }
+        if (text.includes("提醒") || text.includes("叫我")) {
+            let dateStr = new Date().toISOString().split('T')[0];
+            let timeStr = "09:00";
+            const dateMatch = text.match(/(\d+)[月\/](\d+)/);
+            if (dateMatch) {
+                const currentYear = new Date().getFullYear();
+                dateStr = `${currentYear}-${dateMatch[1].padStart(2, '0')}-${dateMatch[2].padStart(2, '0')}`;
+            } else if (text.includes("明天")) {
+                const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+                dateStr = tomorrow.toISOString().split('T')[0];
+            }
+            const timeMatch = text.match(/(\d+)點(\d+)?/);
+            if (timeMatch) {
+                timeStr = `${timeMatch[1].padStart(2, '0')}:${(timeMatch[2] || "00").padStart(2, '0')}`;
+            }
+            sendToGas({ mode: 'reminder', content: text, date: dateStr, time: timeStr });
+            return;
+        }
+        statusText.innerText = "❌ 無法辨識指令，請試著說「今日買菜花費500元」或「11/10提醒我預約長照車」";
+    }
+
+    function sendToGas(data) {
+        statusText.innerText = "🚀 正在將資料同步至雲端...";
+        fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(() => {
+            statusText.innerText = "✅ 處理完成！已成功存入文件。";
+            resultText.innerText = `[已記錄]\n類型: ${data.mode === 'expense' ? '記帳' : '提醒事項'}\n內容: ${data.content}`;
+        }).catch(err => { statusText.innerText = "❌ 傳送失敗"; console.error(err); });
+    }
+</script>
+</body>
+</html>
