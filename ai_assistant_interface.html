@@ -197,41 +197,72 @@
         }
     }
 
+    // 💡 修正後的核心確認判斷函數
     function handleConfirmation(text) {
-        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好")) {
+        resultText.innerText = "您的確認回答：" + text;
+
+        // 1. 🔍 優先判定「拒絕語意」：包含 不、錯、取消、改，立刻阻斷！
+        if (text.includes("不") || text.includes("錯") || text.includes("取消") || text.includes("改")) {
+            statusText.innerText = "❌ 已取消記錄。";
+            speak("好的，已幫您取消，請重新點擊按鈕錄製。", function() {
+                resetToInitial();
+            });
+            return; // 🎯 關鍵阻斷點：直接退出，絕對不會觸發下方的 sendToGas
+        }
+
+        // 2. 🔍 確定排除拒絕詞後，才判定「同意語意」
+        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")) {
+            if (!savedPendingData) {
+                resetToInitial();
+                return;
+            }
             statusText.innerText = "🚀 確認正確，正在同步至雲端...";
             speak("收到，正在幫您寫入文件。");
             sendToGas(savedPendingData);
         } else {
-            statusText.innerText = "❌ 已取消記錄。";
-            speak("好的，已幫您取消，請重新點擊按鈕錄製。", () => {
-                resetToInitial();
+            // 如果使用者講了不相干的話，要求重新確認
+            statusText.innerText = "❓ 請清楚回答「對」或「不對」";
+            speak("抱歉，請清楚回答對、或者不對。", function() {
+                if (!isRecording) recognition.start();
             });
         }
     }
 
+        // 💡 優化後的重置函數：全面恢復按鈕動畫與文字狀態
     function resetToInitial() {
         isConfirmStage = false;
         savedPendingData = null;
         statusText.innerText = "準備就緒";
+        resultText.innerText = "識別結果與解析會顯示在這裡...";
         subTitle.innerText = "點擊麥克風後開始說話...";
+        micButton.classList.remove('recording');
+        micButton.classList.remove('confirming');
     }
 
+    // 💡 傳送至後端 GAS 的函數
     function sendToGas(data) {
-        fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-        .then(() => {
+        fetch(GAS_WEB_APP_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(data) 
+        })
+        .then(function() {
             statusText.innerText = "✅ 處理完成！已成功存入文件。";
-            resultText.innerText = `[已記錄]\n類型: ${data.mode === 'expense' ? '記帳' : '提醒事項'}\n內容: ${data.content}`;
-            speak("已成功存入文件，大功告成。");
-            isConfirmStage = false;
-            savedPendingData = null;
-        }).catch(err => { 
+            resultText.innerText = "[已記錄]\n類型: " + (data.mode === 'expense' ? '記帳' : '提醒事項') + "\n內容: " + data.content;
+            speak("已成功存入文件，大功告成。", function() {
+                // 成功寫入並說完話 3 秒後，自動全面重置網頁狀態，迎接下一次記錄
+                setTimeout(resetToInitial, 3000);
+            });
+        })
+        .catch(function(err) { 
             statusText.innerText = "❌ 傳送失敗"; 
             speak("糟糕，傳送失敗了。");
             console.error(err); 
             resetToInitial();
         });
     }
+
 </script>
 </body>
 </html>
