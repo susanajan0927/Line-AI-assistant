@@ -398,7 +398,7 @@
 <div class="phone-container">
     <header class="header-section">
         <div class="greeting-box">
-            <h1 class="greeting-title" id="greetingTitle">早安！ 💙</h1>
+            <h1 class="greeting-title" id="greetingTitle">早安！🌞💖</h1>
             <p class="greeting-sub" id="subTitle">今天也要加油喔！<br>點擊麥克風後開始說話...</p>
         </div>
         <div class="robot-illustration">
@@ -495,7 +495,7 @@
     function updateGreetingByTime() {
         const hour = new Date().getHours();
         if (hour >= 5 && hour < 12) {
-            greetingTitle.innerHTML = '早安！ 💙';
+            greetingTitle.innerHTML = '早安！🌞💖';
             subTitle.innerHTML = '今天也要加油喔！<br>點擊麥克風後開始說話...';
         } else if (hour >= 12 && hour < 18) {
             greetingTitle.innerHTML = '午安！ ☀️';
@@ -874,7 +874,7 @@
                 renderTodoList(currentTodos);
             }
 
-            speak("已成功存入文件，大功告成。", function() {
+            speak("已成功存入文件，祝福平安順心。", function() {
                 setTimeout(() => {
                     resetToInitial();
                     fetchAndRenderTodos();
