@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI 語音智慧助手</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-top: #e0f2fe;
@@ -28,7 +29,7 @@
             display: flex;
             justify-content: center;
             color: var(--text-dark);
-            padding-bottom: 165px;
+            padding-bottom: 110px;
             overflow-x: hidden;
         }
         .phone-container {
@@ -39,6 +40,16 @@
             flex-direction: column;
             gap: 16px;
             position: relative;
+        }
+        .page-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .header-section {
             position: relative;
@@ -63,12 +74,13 @@
             color: #2563eb;
             font-weight: 500;
         }
+        /* 動態揮手機器人動畫 */
         .robot-illustration {
             position: absolute;
             top: -8px;
             right: -6px;
-            width: 115px;
-            height: 115px;
+            width: 120px;
+            height: 120px;
             background: radial-gradient(circle, rgba(147, 197, 253, 0.55) 0%, rgba(255, 255, 255, 0) 72%);
             border-radius: 50%;
             display: flex;
@@ -76,6 +88,26 @@
             justify-content: center;
             pointer-events: none;
         }
+        .robot-float {
+            animation: robot-bob 3s ease-in-out infinite;
+            transform-origin: center center;
+        }
+        .robot-waving-arm {
+            transform-origin: 36px 84px;
+            animation: robot-wave 1.6s ease-in-out infinite;
+        }
+        @keyframes robot-bob {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes robot-wave {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-32deg); }
+            40% { transform: rotate(10deg); }
+            60% { transform: rotate(-28deg); }
+            80% { transform: rotate(5deg); }
+        }
+
         .card {
             background: var(--card-bg);
             border-radius: 24px;
@@ -260,53 +292,69 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 10px 0 18px 0;
-            gap: 14px;
+            margin: 12px 0 18px 0;
+            gap: 16px;
             position: relative;
             z-index: 20;
         }
         .mic-wrapper {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 136px;
+            height: 136px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+        /* 強化版明顯發散波紋（三層光環） */
         .mic-ripple {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(96, 165, 250, 0.45) 0%, rgba(59, 130, 246, 0.08) 70%);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 30%, rgba(96, 165, 250, 0.55) 100%);
+            border: 2px solid rgba(59, 130, 246, 0.65);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.35);
             pointer-events: none;
-            animation: idle-wave 2.8s infinite ease-out;
+            animation: idle-wave 2.7s infinite cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .mic-ripple.delay {
-            animation-delay: 1.4s;
+        .mic-ripple.delay-1 {
+            animation-delay: 0.9s;
+        }
+        .mic-ripple.delay-2 {
+            animation-delay: 1.8s;
         }
         .mic-wrapper.recording .mic-ripple {
-            background: radial-gradient(circle, rgba(255, 71, 87, 0.5) 0%, rgba(255, 107, 129, 0.1) 70%);
-            animation: active-wave 1.4s infinite ease-out;
+            background: radial-gradient(circle, rgba(255, 71, 87, 0.38) 30%, rgba(255, 107, 129, 0.65) 100%);
+            border: 2.5px solid rgba(255, 71, 87, 0.85);
+            box-shadow: 0 0 18px rgba(255, 71, 87, 0.45);
+            animation: active-wave 1.5s infinite cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .mic-wrapper.recording .mic-ripple.delay {
-            animation-delay: 0.7s;
+        .mic-wrapper.recording .mic-ripple.delay-1 {
+            animation-delay: 0.5s;
+        }
+        .mic-wrapper.recording .mic-ripple.delay-2 {
+            animation-delay: 1.0s;
         }
         .mic-wrapper.confirming .mic-ripple {
-            background: radial-gradient(circle, rgba(30, 168, 150, 0.5) 0%, rgba(46, 213, 115, 0.1) 70%);
-            animation: active-wave 1.4s infinite ease-out;
+            background: radial-gradient(circle, rgba(30, 168, 150, 0.38) 30%, rgba(46, 213, 115, 0.65) 100%);
+            border: 2.5px solid rgba(30, 168, 150, 0.85);
+            box-shadow: 0 0 18px rgba(30, 168, 150, 0.45);
+            animation: active-wave 1.5s infinite cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .mic-wrapper.confirming .mic-ripple.delay {
-            animation-delay: 0.7s;
+        .mic-wrapper.confirming .mic-ripple.delay-1 {
+            animation-delay: 0.5s;
+        }
+        .mic-wrapper.confirming .mic-ripple.delay-2 {
+            animation-delay: 1.0s;
         }
         @keyframes idle-wave {
-            0% { transform: scale(0.95); opacity: 0.85; }
-            70% { transform: scale(1.48); opacity: 0.2; }
-            100% { transform: scale(1.65); opacity: 0; }
+            0% { transform: scale(1); opacity: 0.95; }
+            65% { transform: scale(1.52); opacity: 0.42; }
+            100% { transform: scale(1.78); opacity: 0; }
         }
         @keyframes active-wave {
-            0% { transform: scale(0.95); opacity: 0.95; }
-            100% { transform: scale(1.75); opacity: 0; }
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.92); opacity: 0; }
         }
         .mic-btn {
             position: relative;
@@ -316,7 +364,7 @@
             border-radius: 50%;
             background: radial-gradient(circle, #60a5fa 0%, #2563eb 100%);
             border: 4px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.38);
             cursor: pointer;
             outline: none;
             transition: all 0.25s ease;
@@ -335,11 +383,11 @@
         }
         .mic-btn.recording {
             background: radial-gradient(circle, #ff6b81 0%, #ff4757 100%);
-            box-shadow: 0 8px 26px rgba(255, 71, 87, 0.45);
+            box-shadow: 0 8px 26px rgba(255, 71, 87, 0.5);
         }
         .mic-btn.confirming {
             background: radial-gradient(circle, #2ed573 0%, #1ea896 100%);
-            box-shadow: 0 8px 26px rgba(30, 168, 150, 0.45);
+            box-shadow: 0 8px 26px rgba(30, 168, 150, 0.5);
         }
         .voice-hint-text {
             font-size: 0.9rem;
@@ -353,8 +401,77 @@
             content: "";
             width: 15px;
             height: 2px;
-            background-color: #bfdbfe;
+            background-color: #93c5fd;
             display: inline-block;
+        }
+        /* 統計分頁專屬樣式 */
+        .stats-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,246,255,0.9) 100%);
+            border-radius: 20px;
+            padding: 16px 14px;
+            box-shadow: 0 6px 18px rgba(147, 197, 253, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stat-label {
+            font-size: 0.82rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .stat-value {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #1d4ed8;
+        }
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 260px;
+            margin: 10px auto;
+        }
+        .category-breakdown {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-top: 1px dashed #bfdbfe;
+            padding-top: 12px;
+        }
+        .cat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.92rem;
+            color: #1e3a8a;
+        }
+        .cat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .action-btn:active {
+            transform: scale(0.98);
         }
         .bottom-nav {
             position: fixed;
@@ -385,95 +502,184 @@
             font-weight: 500;
             cursor: pointer;
             flex: 1;
+            transition: color 0.2s;
         }
         .nav-item i {
             font-size: 1.22rem;
         }
         .nav-item.active {
             color: #2563eb;
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
 <div class="phone-container">
-    <header class="header-section">
-        <div class="greeting-box">
-            <h1 class="greeting-title" id="greetingTitle">早安！🌞💖</h1>
-            <p class="greeting-sub" id="subTitle">今天也要加油喔！<br>點擊麥克風後開始說話...</p>
+    <!-- 分頁 1：首頁 -->
+    <div id="page-home" class="page-section">
+        <header class="header-section">
+            <div class="greeting-box">
+                <h1 class="greeting-title" id="greetingTitle">早安！🌞</h1>
+                <p class="greeting-sub" id="subTitle">今天也要保持好心情💖喔！<br>請點擊麥克風後開始說話...</p>
+            </div>
+            <div class="robot-illustration">
+                <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="60" r="52" fill="#DBEAFE" fill-opacity="0.6"/>
+                    <g class="robot-float">
+                        <g class="robot-waving-arm">
+                            <path d="M38 84C26 78 18 68 18 57" stroke="#60A5FA" stroke-width="6.5" stroke-linecap="round"/>
+                            <circle cx="18" cy="54" r="6.5" fill="#3B82F6"/>
+                            <circle cx="16.5" cy="52" r="2" fill="#FFFFFF" fill-opacity="0.85"/>
+                        </g>
+                        <path d="M82 84C90 87 95 92 96 98" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="96" cy="99" r="5.5" fill="#3B82F6"/>
+
+                        <line x1="60" y1="14" x2="60" y2="26" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="60" cy="12" r="5" fill="#3B82F6"/>
+                        <rect x="20" y="42" width="10" height="24" rx="5" fill="#3B82F6"/>
+                        <rect x="90" y="42" width="10" height="24" rx="5" fill="#3B82F6"/>
+                        <rect x="28" y="26" width="64" height="54" rx="22" fill="#FFFFFF" stroke="#93C5FD" stroke-width="4"/>
+                        <rect x="36" y="35" width="48" height="34" rx="14" fill="#1E3A8A"/>
+                        <path d="M44 50C44 47.5 47.5 47.5 47.5 50" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round"/>
+                        <path d="M72.5 50C72.5 47.5 76 47.5 76 50" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="43" cy="56" r="3" fill="#F472B6" fill-opacity="0.8"/>
+                        <circle cx="77" cy="56" r="3" fill="#F472B6" fill-opacity="0.8"/>
+                        <path d="M55 57C57 60 63 60 65 57" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M40 84C40 79 45 77 60 77C75 77 80 79 80 84V96C80 100 76 102 60 102C44 102 40 100 40 96V84Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="3.5"/>
+                        <circle cx="60" cy="90" r="7" fill="#3B82F6"/>
+                        <path d="M60 86V91M57.5 89.5C57.5 91 58.6 92 60 92C61.4 92 62.5 91 62.5 89.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    </g>
+                </svg>
+            </div>
+        </header>
+        
+        <main class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-regular fa-calendar-days" style="color: #3b82f6; font-size: 1.25rem;"></i>
+                    <span>今日待辦</span>
+                    <button class="refresh-btn" id="refreshBtn" title="重新同步試算表">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+                <div class="card-date" id="current-date">載入中...</div>
+            </div>
+            <div class="todo-list" id="todo-container">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">正在同步試算表行程...</p>
+            </div>
+            <div id="status" class="status-bar">準備就緒</div>
+            <div id="result" class="result-box">識別結果與解析顯示在這裡...</div>
+        </main>
+        
+        <div class="reminder-card">
+            <div class="reminder-bell">🔔</div>
+            <div class="reminder-body">
+                <div class="reminder-label">下一個提醒</div>
+                <div class="reminder-content-flex">
+                    <div class="reminder-time" id="next-time">--:--</div>
+                    <div class="reminder-divider"></div>
+                    <div class="reminder-text" id="next-task">目前暫無即將到來的提醒</div>
+                    <div class="badge-upcoming">距離最近</div>
+                </div>
+            </div>
         </div>
-        <div class="robot-illustration">
-            <svg width="102" height="102" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="60" cy="60" r="52" fill="#DBEAFE" fill-opacity="0.6"/>
-                <line x1="60" y1="14" x2="60" y2="26" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
-                <circle cx="60" cy="12" r="5" fill="#3B82F6"/>
-                <rect x="20" y="42" width="10" height="24" rx="5" fill="#3B82F6"/>
-                <rect x="90" y="42" width="10" height="24" rx="5" fill="#3B82F6"/>
-                <rect x="28" y="26" width="64" height="54" rx="22" fill="#FFFFFF" stroke="#93C5FD" stroke-width="4"/>
-                <rect x="36" y="35" width="48" height="34" rx="14" fill="#1E3A8A"/>
-                <path d="M44 50C44 47.5 47.5 47.5 47.5 50" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round"/>
-                <path d="M72.5 50C72.5 47.5 76 47.5 76 50" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round"/>
-                <circle cx="43" cy="56" r="3" fill="#F472B6" fill-opacity="0.7"/>
-                <circle cx="77" cy="56" r="3" fill="#F472B6" fill-opacity="0.7"/>
-                <path d="M55 57C57 60 63 60 65 57" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
-                <path d="M40 84C40 79 45 77 60 77C75 77 80 79 80 84V96C80 100 76 102 60 102C44 102 40 100 40 96V84Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="3.5"/>
-                <circle cx="60" cy="90" r="7" fill="#3B82F6"/>
-                <path d="M60 86V91M57.5 89.5C57.5 91 58.6 92 60 92C61.4 92 62.5 91 62.5 89.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+        
+        <div class="voice-section">
+            <div class="mic-wrapper" id="micWrapper">
+                <div class="mic-ripple"></div>
+                <div class="mic-ripple delay-1"></div>
+                <div class="mic-ripple delay-2"></div>
+                <button class="mic-btn" id="micButton" type="button">
+                    <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12,14c1.66,0,3-1.34,3-3V5c0-1.66-1.34-3-3-3S9,3.34,9,5v6C9,12.66,10.34,14,12,14z M17,11c0,2.76-2.24,5-5,5s-5-2.24-5-5H5c0,3.53,2.61,6.43,6,6.92V21h2v-3.08c3.39-0.49,6-3.39,6-6.92H17z"/></svg>
+                </button>
+            </div>
+            <div class="voice-hint-text" id="voiceHint">請點擊麥克風開始</div>
         </div>
-    </header>
-    
-    <main class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <i class="fa-regular fa-calendar-days" style="color: #3b82f6; font-size: 1.25rem;"></i>
-                <span>今日待辦</span>
-                <button class="refresh-btn" id="refreshBtn" title="重新同步試算表">
+    </div>
+
+    <!-- 分頁 2：待辦總覽 -->
+    <div id="page-todo" class="page-section" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-regular fa-square-check" style="color: #3b82f6; font-size: 1.25rem;"></i>
+                    <span>今日行程總覽</span>
+                </div>
+                <button class="refresh-btn" onclick="fetchAndRenderTodos()" title="重新整理">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
-            <div class="card-date" id="current-date">載入中...</div>
+            <div class="todo-list" id="todo-full-container" style="max-height: 420px;">
+                <p style="color: #64748b; font-size: 0.92rem; text-align: center;">正在載入待辦清單...</p>
+            </div>
         </div>
-        <div class="todo-list" id="todo-container">
-            <p style="color: var(--text-muted); font-size: 0.9rem;">正在同步試算表行程...</p>
+    </div>
+
+    <!-- 分頁 3：記帳統計 -->
+    <div id="page-stats" class="page-section" style="display: none;">
+        <div class="stats-summary-grid">
+            <div class="stat-box">
+                <span class="stat-label"><i class="fa-regular fa-calendar"></i> 本月累計總支出</span>
+                <span class="stat-value" id="month-total">$0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label"><i class="fa-solid fa-coins"></i> 年度累計總支出</span>
+                <span class="stat-value" id="year-total">$0</span>
+            </div>
         </div>
-        <div id="status" class="status-bar">準備就緒</div>
-        <div id="result" class="result-box">識別結果與解析會顯示在這裡...</div>
-    </main>
-    
-    <div class="reminder-card">
-        <div class="reminder-bell">🔔</div>
-        <div class="reminder-body">
-            <div class="reminder-label">下一個提醒</div>
-            <div class="reminder-content-flex">
-                <div class="reminder-time" id="next-time">--:--</div>
-                <div class="reminder-divider"></div>
-                <div class="reminder-text" id="next-task">目前暫無即將到來的提醒</div>
-                <div class="badge-upcoming">距離最近</div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-chart-pie" style="color: #3b82f6; font-size: 1.2rem;"></i>
+                    <span>本月生活花費佔比</span>
+                </div>
+                <button class="refresh-btn" onclick="loadStatsData()" title="重新計算">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+            <div id="stats-status" style="text-align: center; font-size: 0.88rem; color: #64748b; margin-bottom: 6px;">
+                點擊下方或自動同步試算表數據
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="expenseChart"></canvas>
+            </div>
+            <div class="category-breakdown" id="category-list"></div>
+        </div>
+    </div>
+
+    <!-- 分頁 4：系統設定 -->
+    <div id="page-settings" class="page-section" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-gear" style="color: #3b82f6; font-size: 1.2rem;"></i>
+                    <span>助理系統設定</span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.92rem; color: #334155;">
+                <div style="background: #eff6ff; padding: 12px; border-radius: 14px; line-height: 1.5;">
+                    <strong>📌 語音小提示：</strong><br>
+                    • 記帳範例：「午餐便當花了120元」、「買咖啡85塊」<br>
+                    • 提醒範例：「明天下午3點提醒我開會」、「今晚8點吃藥」
+                </div>
+                <button class="action-btn" onclick="forceSyncAll()">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> 立即同步雲端試算表資料
+                </button>
             </div>
         </div>
     </div>
     
-    <div class="voice-section">
-        <div class="mic-wrapper" id="micWrapper">
-            <div class="mic-ripple"></div>
-            <div class="mic-ripple delay"></div>
-            <button class="mic-btn" id="micButton" type="button">
-                <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12,14c1.66,0,3-1.34,3-3V5c0-1.66-1.34-3-3-3S9,3.34,9,5v6C9,12.66,10.34,14,12,14z M17,11c0,2.76-2.24,5-5,5s-5-2.24-5-5H5c0,3.53,2.61,6.43,6,6.92V21h2v-3.08c3.39-0.49,6-3.39,6-6.92H17z"/></svg>
-            </button>
-        </div>
-        <div class="voice-hint-text" id="voiceHint">點擊麥克風開始</div>
-    </div>
-    
     <nav class="bottom-nav">
-        <a class="nav-item active"><i class="fa-solid fa-house"></i><span>首頁</span></a>
-        <a class="nav-item"><i class="fa-regular fa-square-check"></i><span>待辦</span></a>
-        <a class="nav-item"><i class="fa-solid fa-chart-simple"></i><span>統計</span></a>
-        <a class="nav-item"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+        <a class="nav-item active" onclick="switchTab('home', this)"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item" onclick="switchTab('todo', this)"><i class="fa-regular fa-square-check"></i><span>待辦</span></a>
+        <a class="nav-item" onclick="switchTab('stats', this)"><i class="fa-solid fa-chart-simple"></i><span>統計</span></a>
+        <a class="nav-item" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i><span>設定</span></a>
     </nav>
 </div>
 
 <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8iRaum6wBwXv4mfjVw5wUgu9aOrDa7vQIKR5jJ87JYPntd8AucuxAod-guPJiJXW_Ig/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvs3RwgBeaqVOgAKmiyRVXC9CQCxoZ0npT7RrrvhghHKwU-g7Xcm1rE1B1MQF4PqvLdw/exec";
     
     const micWrapper = document.getElementById('micWrapper');
     const micButton = document.getElementById('micButton');
@@ -483,6 +689,7 @@
     const greetingTitle = document.getElementById('greetingTitle');
     const voiceHint = document.getElementById('voiceHint');
     const todoContainer = document.getElementById('todo-container');
+    const todoFullContainer = document.getElementById('todo-full-container');
     const refreshBtn = document.getElementById('refreshBtn');
     
     let recognition = null; 
@@ -491,18 +698,150 @@
     let savedPendingData = null;
     let silenceTimer = null;
     let finalTranscriptBuffer = "";
+    let expenseChartInstance = null;
 
+    // ==================== 底部選單秒切分頁邏輯 ====================
+    function switchTab(tabName, navElement) {
+        document.querySelectorAll('.page-section').forEach(sec => {
+            sec.style.display = 'none';
+        });
+        const targetPage = document.getElementById('page-' + tabName);
+        if (targetPage) {
+            targetPage.style.display = 'flex';
+        }
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        if (navElement) {
+            navElement.classList.add('active');
+        }
+        if (tabName === 'stats') {
+            loadStatsData();
+        }
+        if (tabName === 'todo') {
+            fetchAndRenderTodos();
+        }
+    }
+
+    function forceSyncAll() {
+        fetchAndRenderTodos();
+        loadStatsData();
+        alert("✅ 已向雲端試算表發送同步請求！");
+    }
+
+    // ==================== 統計數據讀取與圓餅圖繪製 ====================
+    async function loadStatsData() {
+        const statsStatus = document.getElementById('stats-status');
+        const categoryListEl = document.getElementById('category-list');
+        statsStatus.innerText = "⏳ 正在讀取試算表並自動分類...";
+
+        try {
+            const response = await fetch(`${GAS_WEB_APP_URL}?action=getStats`);
+            const result = await response.json();
+
+            if (result.status === 'success' && result.data) {
+                const { monthTotal, yearTotal, categories } = result.data;
+
+                document.getElementById('month-total').innerText = `$${Number(monthTotal).toLocaleString()}`;
+                document.getElementById('year-total').innerText = `$${Number(yearTotal).toLocaleString()}`;
+
+                const colorPalette = {
+                    '餐飲': '#3b82f6',
+                    '交通': '#10b981',
+                    '購物': '#f59e0b',
+                    '娛樂': '#ec4899',
+                    '醫療': '#8b5cf6',
+                    '其他': '#94a3b8'
+                };
+
+                const labels = [];
+                const values = [];
+                const bgColors = [];
+                categoryListEl.innerHTML = '';
+
+                for (const [cat, val] of Object.entries(categories)) {
+                    if (val > 0) {
+                        labels.push(cat);
+                        values.push(val);
+                        bgColors.push(colorPalette[cat] || '#60a5fa');
+
+                        const percent = monthTotal > 0 ? Math.round((val / monthTotal) * 100) : 0;
+                        categoryListEl.innerHTML += `
+                            <div class="cat-row">
+                                <div><span class="cat-dot" style="background:${colorPalette[cat] || '#60a5fa'}"></span>${cat}</div>
+                                <div><strong>$${Number(val).toLocaleString()}</strong> <span style="color:#64748b; font-size:0.82rem;">(${percent}%)</span></div>
+                            </div>
+                        `;
+                    }
+                }
+
+                if (values.length === 0) {
+                    statsStatus.innerText = "本月尚無記帳紀錄，快去首頁用語音記一筆吧！";
+                    if (expenseChartInstance) {
+                        expenseChartInstance.destroy();
+                        expenseChartInstance = null;
+                    }
+                    return;
+                }
+
+                statsStatus.innerText = "自動分類統計完成 ✨";
+
+                const ctx = document.getElementById('expenseChart').getContext('2d');
+                if (expenseChartInstance) {
+                    expenseChartInstance.destroy();
+                }
+
+                expenseChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: bgColors,
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '62%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 14,
+                                    font: { size: 13 }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                statsStatus.innerText = "⚠️ 無法取得統計數據，請確認 Apps Script 已部署新版本";
+            }
+        } catch (err) {
+            console.error("統計載入錯誤:", err);
+            statsStatus.innerText = "❌ 連線失敗，請稍後再試";
+        }
+    }
+
+    // ==================== 台灣時間問候語 ====================
     function updateGreetingByTime() {
-        const hour = new Date().getHours();
+        const taiwanTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" });
+        const hour = new Date(taiwanTime).getHours();
+
         if (hour >= 5 && hour < 12) {
             greetingTitle.innerHTML = '早安！🌞💖';
-            subTitle.innerHTML = '今天也要加油喔！<br>點擊麥克風後開始說話...';
+            subTitle.innerHTML = '今天也要保持好心情喔！<br>請點擊麥克風後開始說話...';
         } else if (hour >= 12 && hour < 18) {
             greetingTitle.innerHTML = '午安！ ☀️';
             subTitle.innerHTML = '下午也要保持活力喔！<br>有什麼需要我幫忙的嗎？';
-        } else {
+        } else if (hour >= 18 && hour < 24) {
             greetingTitle.innerHTML = '晚安！ 🌙';
             subTitle.innerHTML = '辛苦一天了！<br>明天有什麼行程要記錄嗎？';
+        } else {
+            greetingTitle.innerHTML = '夜深了！ ✨';
+            subTitle.innerHTML = '還沒睡嗎？記得早點休息喔！<br>有什麼想法想先記下來嗎？';
         }
     }
 
@@ -538,18 +877,20 @@
 
     function renderTodoList(todos) {
         if (!todos || todos.length === 0) {
-            todoContainer.innerHTML = '<p style="color: #64748b; font-size: 0.92rem; text-align: center; padding: 10px 0;">今日試算表尚無提醒紀錄</p>';
+            const emptyHtml = '<p style="color: #64748b; font-size: 0.92rem; text-align: center; padding: 10px 0;">今日試算表尚無提醒紀錄</p>';
+            todoContainer.innerHTML = emptyHtml;
+            if (todoFullContainer) todoFullContainer.innerHTML = emptyHtml;
             updateNextReminderCard([]);
             return;
         }
-        todoContainer.innerHTML = '';
+        let listHtml = '';
         todos.forEach(todo => {
             const checkedClass = todo.done ? 'checked' : '';
             const checkIcon = todo.done ? '<i class="fa-solid fa-check"></i>' : '';
             const textClass = todo.done ? 'completed' : '';
             const timeHtml = todo.time ? '<div class="todo-time">' + todo.time + '</div>' : '';
             
-            todoContainer.innerHTML += 
+            listHtml += 
                 '<div class="todo-item">' +
                     '<div class="todo-left">' +
                         '<div class="todo-checkbox ' + checkedClass + '">' + checkIcon + '</div>' +
@@ -558,6 +899,8 @@
                     timeHtml +
                 '</div>';
         });
+        todoContainer.innerHTML = listHtml;
+        if (todoFullContainer) todoFullContainer.innerHTML = listHtml;
         updateNextReminderCard(todos);
     }
 
@@ -588,7 +931,9 @@
                 return;
             } catch (e) {}
         }
-        todoContainer.innerHTML = '<p style="color: #64748b; font-size: 0.9rem; text-align: center;">尚未同步到試算表資料，請點擊右上方重新整理</p>';
+        const noDataHtml = '<p style="color: #64748b; font-size: 0.9rem; text-align: center;">尚未同步到試算表資料，請點擊右上方重新整理</p>';
+        todoContainer.innerHTML = noDataHtml;
+        if (todoFullContainer) todoFullContainer.innerHTML = noDataHtml;
     }
 
     refreshBtn.addEventListener('click', () => {
@@ -672,7 +1017,7 @@
 
             if (!isConfirmStage) {
                 const spokenText = finalTranscriptBuffer.trim() || resultText.innerText.replace("🎙️ 即時字幕：", "").trim();
-                if (spokenText && spokenText !== "識別結果與解析會顯示在這裡...") {
+                if (spokenText && spokenText !== "識別結果與解析顯示在這裡...") {
                     resultText.innerText = "聽到指令：" + spokenText;
                     parseCommand(spokenText);
                 } else {
@@ -734,7 +1079,6 @@
         }
     }
 
-    // 智慧自然語意解析：即使不說「提醒」二字，只要包含日期/時間/行程字眼也能自動辨識為提醒事項
     function parseCommand(text) {
         statusText.innerText = "AI 正在分析語意...";
         let pendingData = null;
@@ -746,13 +1090,11 @@
         const hasRelativeTime = /今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/.test(text);
         const hasReminderKeyword = /提醒|叫我|通知|記得|別忘|不要忘|行程|預約|開會|看診|領藥|吃藥/.test(text);
 
-        // 1. 優先判斷記帳（有花費動詞或金額單位，且不是單純講幾點幾分）
         if (hasExpenseKeyword && amountMatch && !timeMatch) {
             const amount = amountMatch[0];
             const content = text.replace(amount, "").replace(/元|塊|今日|今天|花了|買了|花|買/g, "").trim();
             pendingData = { mode: 'expense', content: content || "日常花費", amount: amount, rawText: text };
         }
-        // 2. 智慧判斷提醒事項（只要說了「提醒」關鍵字，或包含「幾月幾號 / 幾點幾分 / 今天明天晚上等時間詞」，不說提醒二字也能通！）
         else if (hasReminderKeyword || dateMatch || timeMatch || hasRelativeTime) {
             let now = new Date();
             let dateStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
