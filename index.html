@@ -1153,13 +1153,22 @@
             if (pendingData.mode === 'expense') {
                 askMsg = "確認記帳內容，請問是要記錄：" + pendingData.content + "，" + pendingData.amount + "元，對嗎？";
             } else {
-                // 將 "2026-11-13" 拆解轉成親切的 "11月13日" 讓語音唸出來
+                // 將 "2026-11-13" 拆解轉成親切的 "11月13日"
                 const dateParts = pendingData.date.split('-');
                 const monthNum = parseInt(dateParts.slice(1, 2).shift(), 10);
                 const dayNum = parseInt(dateParts.slice(2, 3).shift(), 10);
                 const spokenDate = monthNum + "月" + dayNum + "日";
+                
+                // ✨ 將 "20:20" 轉換成超自然的「晚上8點20分」口語說法
+                const timeParts = pendingData.time.split(':');
+                const h24 = parseInt(timeParts.slice(0, 1).shift(), 10);
+                const mNum = parseInt(timeParts.slice(1, 2).shift(), 10);
+                let period = h24 < 6 ? "凌晨" : (h24 < 12 ? "早上" : (h24 === 12 ? "中午" : (h24 < 18 ? "下午" : "晚上")));
+                let h12 = h24 % 12 || 12;
+                let mSpoken = mNum === 0 ? "整" : (mNum === 30 ? "半" : mNum + "分");
+                const spokenTime = period + h12 + "點" + mSpoken;
 
-                askMsg = "確認提醒：" + spokenDate + " " + pendingData.time + "，" + pendingData.content + "，對嗎？";
+                askMsg = "確認提醒：" + spokenDate + " " + spokenTime + "，" + pendingData.content + "，對嗎？";
             }
 
             // 同步把確認文字顯示在畫面框框裡，方便一邊聽一邊看
