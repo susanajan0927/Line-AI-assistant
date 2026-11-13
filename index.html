@@ -1127,18 +1127,46 @@
                 timeStr = hour.toString().padStart(2, '0') + ":" + minute;
             }
 
-            pendingData = { mode: 'reminder', content: text, date: dateStr, time: timeStr, rawText: text };
+            // ✨ 1. 自動過濾掉「明天、幾月幾號、幾點幾分、提醒我」等時間與前綴字眼，只保留純粹的待辦事項
+            let cleanContent = text
+                .replace(/(\d+)月(\d+)[號日]?/g, "")
+                .replace(/(\d+)[點時](\d+|半)?分?/g, "")
+                .replace(/今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/g, "")
+                .replace(/請提醒我|提醒我|記得|幫我記|通知我/g, "")
+                .trim();
+
+            // 如果過濾完變空的（例如只說了時間），就保留原本的文字
+            if (!cleanContent) cleanContent = text;
+
+            pendingData = { mode: 'reminder', content: cleanContent, date: dateStr, time: timeStr, rawText: text };
         }
 
+        // 若成功解析出指令，進入「語音二次確認階段」
         if (pendingData) {
             savedPendingData = pendingData;
             isConfirmStage = true;
             statusText.innerText = "🔊 正在語音確認中...";
             voiceHint.innerText = "請準備回答對或不對";
 
-            const typeLabel = pendingData.mode === 'expense' ? '記帳' : '提醒';
-            const askMsg = "確認" + typeLabel + "內容，請問是要記錄：" + text + "，對嗎？";
+            // ✨ 2. 組合更精準的語音確認朗讀句
+            let askMsg = "";
+            if (pendingData.mode === 'expense') {
+                askMsg = "確認記帳內容，請問是要記錄：" + pendingData.content + "，" + pendingData.amount + "元，對嗎？";
+            } else {
+                // 將 "2026-11-13" 拆解轉成親切的 "11月13日" 讓語音唸出來
+                const dateParts = pendingData.date.split('-');
+                const monthNum = parseInt(dateParts.slice(1, 2).shift(), 10);
+                const dayNum = parseInt(dateParts.slice(2, 3).shift(), 10);
+                const spokenDate = monthNum + "月" + dayNum + "日";
+
+                askMsg = "確認提醒：" + spokenDate + " " + pendingData.time + "，" + pendingData.content + "，對嗎？";
+            }
+
+            // 同步把確認文字顯示在畫面框框裡，方便一邊聽一邊看
+            resultText.innerText = "🤖 " + askMsg;
+
             speak(askMsg, () => {
+
                 if (!isRecording && recognition) {
                     recognition.continuous = false;
                     recognition.interimResults = false;
