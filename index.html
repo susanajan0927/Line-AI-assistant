@@ -1175,11 +1175,14 @@
             statusText.innerText = "🔊 正在語音確認中...";
             voiceHint.innerText = "請準備回答對或不對";
 
-            // ✨ 2. 組合更精準的語音確認朗讀句
+        // ✨ 2. 組合更精準的語音確認朗讀句
             let askMsg = "";
             if (pendingData.mode === 'expense') {
-                askMsg = "確認記帳內容，請問是要記錄：" + pendingData.content + "，" + pendingData.amount + "元，對嗎？";
+                // 將阿拉伯數字轉為自然中文口語（解決 1000~9999 被誤判為年份唸成「一零零零」的問題）
+                const spokenAmount = numberToChinese(pendingData.amount);
+                askMsg = "確認記帳內容，請問是要記錄：" + pendingData.content + "，" + spokenAmount + "元，對嗎？";
             } else {
+
                 // 將 "2026-11-13" 拆解轉成親切的 "11月13日"
                 const dateParts = pendingData.date.split('-');
                 const monthNum = parseInt(dateParts.slice(1, 2).shift(), 10);
