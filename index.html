@@ -1117,9 +1117,16 @@
         const hasRelativeTime = /今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/.test(text);
         const hasReminderKeyword = /提醒|叫我|通知|記得|別忘|不要忘|行程|預約|開會|看診|領藥|吃藥/.test(text);
 
-        if (hasExpenseKeyword && amountMatch && !timeMatch) {
+  if (hasExpenseKeyword && amountMatch && !timeMatch) {
             const amount = amountMatch[0];
-            const content = text.replace(amount, "").replace(/元|塊|今日|今天|花了|買了|花|買/g, "").trim();
+            // 1. 先暫時把「買菜」保護起來，避免後面的 replace 把「買」刪掉
+            let protectedText = text.replace(/買菜/g, "__BUY_VEG__");
+            // 2. 過濾掉金額、單位與多餘動詞，最後再把「買菜」還原回來
+            const content = protectedText
+                .replace(amount, "")
+                .replace(/元|塊|今日|今天|花了|買了|花|買/g, "")
+                .replace(/__BUY_VEG__/g, "買菜")
+                .trim();
             pendingData = { mode: 'expense', content: content || "日常花費", amount: amount, rawText: text };
         }
         else if (hasReminderKeyword || dateMatch || timeMatch || hasRelativeTime) {
