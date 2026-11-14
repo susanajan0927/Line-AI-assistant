@@ -520,7 +520,7 @@
         <header class="header-section">
             <div class="greeting-box">
                 <h1 class="greeting-title" id="greetingTitle">早安！🌞</h1>
-                <p class="greeting-sub" id="subTitle">今天也要保持好心情💖喔！<br>請點擊麥克風後開始說話...</p>
+                <p class="greeting-sub" id="subTitle">又是美好幸運的一天開始喔！💖<br>請點擊麥克風後開始說話...</p>
             </div>
             <div class="robot-illustration">
                 <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -639,7 +639,7 @@
                 </button>
             </div>
             <div id="stats-status" style="text-align: center; font-size: 0.88rem; color: #64748b; margin-bottom: 6px;">
-                點擊下方或自動同步試算表數據
+                請點擊下方或自動同步試算表數據
             </div>
             <div class="chart-wrapper">
                 <canvas id="expenseChart"></canvas>
@@ -776,7 +776,7 @@
                 }
 
                 if (values.length === 0) {
-                    statsStatus.innerText = "本月尚無記帳紀錄，快去首頁用語音記一筆吧！";
+                    statsStatus.innerText = "本月尚無記帳紀錄，要點擊首頁用語音新增一筆嗎？";
                     if (expenseChartInstance) {
                         expenseChartInstance.destroy();
                         expenseChartInstance = null;
@@ -831,8 +831,8 @@
         const hour = new Date(taiwanTime).getHours();
 
         if (hour >= 5 && hour < 12) {
-            greetingTitle.innerHTML = '早安！🌞💖';
-            subTitle.innerHTML = '今天也要保持好心情喔！<br>請點擊麥克風後開始說話...';
+            greetingTitle.innerHTML = '早安！🌞';
+            subTitle.innerHTML = '又是美好幸運的一天開始喔！💖<br>請點擊麥克風後開始說話...';
         } else if (hour >= 12 && hour < 18) {
             greetingTitle.innerHTML = '午安！ ☀️';
             subTitle.innerHTML = '下午也要保持活力喔！<br>有什麼需要我幫忙的嗎？';
@@ -1039,7 +1039,7 @@
             } else {
                 statusText.innerText = "語音識別結束或超時，請再試一次";
             }
-            voiceHint.innerText = "點擊麥克風開始";
+            voiceHint.innerText = "請點擊麥克風開始";
         };
     }
 
@@ -1215,14 +1215,14 @@
         } else {
             statusText.innerText = "❌ 無法辨識指令，請說出時間或金額再試一次。";
             speak("抱歉，我沒有聽懂，請加上時間或金額再說一次。");
-            voiceHint.innerText = "點擊麥克風重新開始";
+            voiceHint.innerText = "請點擊麥克風重新開始";
         }
     }
 
     function handleConfirmation(text) {
         resultText.innerText = "您的確認回答：" + text;
 
-        if (text.includes("不") || text.includes("錯") || text.includes("取消") || text.includes("改")) {
+        if (text.includes("不") || text.includes("錯") || text.includes("取消") || text.includes("改")|| text.includes("No")) {
             statusText.innerText = "❌ 已取消記錄。";
             speak("好的，已幫您取消，請重新點擊按鈕錄製。", function() {
                 resetToInitial();
@@ -1230,13 +1230,13 @@
             return;
         }
 
-        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")) {
+        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")|| text.includes("Yes")) {
             if (!savedPendingData) {
                 resetToInitial();
                 return;
             }
             statusText.innerText = "🚀 確認正確，正在同步至雲端...";
-            speak("收到，正在幫您寫入文件。");
+            speak("收到，正在寫入文件。");
             sendToGas(savedPendingData);
         } else {
             statusText.innerText = "❓ 請清楚回答「對」或「不對」";
@@ -1257,7 +1257,7 @@
         statusText.innerText = "準備就緒";
         resultText.innerText = "識別結果與解析會顯示在這裡...";
         updateGreetingByTime();
-        voiceHint.innerText = "點擊麥克風開始";
+        voiceHint.innerText = "請點擊麥克風開始";
         micButton.classList.remove('recording');
         micButton.classList.remove('confirming');
         micWrapper.classList.remove('recording');
@@ -1272,7 +1272,7 @@
             body: JSON.stringify(data) 
         })
         .then(function() {
-            statusText.innerText = "✅ 處理完成！已成功存入文件。";
+            statusText.innerText = "✅ 處理完成！已成功寫入文件。";
             resultText.innerText = "[已記錄]\n類型: " + (data.mode === 'expense' ? '記帳' : '提醒事項') + "\n內容: " + data.content;
             
             if (data.mode === 'reminder') {
@@ -1283,7 +1283,7 @@
                 renderTodoList(currentTodos);
             }
 
-            speak("已成功存入文件，祝福平安順心。", function() {
+            speak("已寫入文件，祝福您平安順心。", function() {
                 setTimeout(() => {
                     resetToInitial();
                     fetchAndRenderTodos();
