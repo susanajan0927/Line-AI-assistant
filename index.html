@@ -1222,7 +1222,7 @@
     function handleConfirmation(text) {
         resultText.innerText = "您的確認回答：" + text;
 
-        if (text.includes("不") || text.includes("錯") || text.includes("取消") || text.includes("改")|| text.includes("No")) {
+        if (text.includes("不") || text.includes("錯") || text.includes("取消") || text.includes("改")) {
             statusText.innerText = "❌ 已取消記錄。";
             speak("好的，已幫您取消，請重新點擊按鈕錄製。", function() {
                 resetToInitial();
@@ -1230,7 +1230,7 @@
             return;
         }
 
-        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")|| text.includes("Yes")) {
+        if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")) {
             if (!savedPendingData) {
                 resetToInitial();
                 return;
