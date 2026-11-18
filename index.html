@@ -781,7 +781,46 @@
         /* 6 個底部導覽列字體微調 */
         .nav-item { font-size: 0.72rem; }
         .nav-item i { font-size: 1.12rem; }
+        /* ✨ 願景板遮罩調淡，讓背景圖更清晰明亮 */
+        .vision-board-overlay {
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.42) 100%) !important;
+        }
+        .vision-board-center {
+            cursor: pointer;
+        }
 
+        /* ✨ 全螢幕高清沉浸願景練習模式 */
+        .fullscreen-vision-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            background-color: #0f172a;
+            background-size: cover;
+            background-position: center;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 20px 32px 20px;
+            color: #ffffff;
+        }
+        .fullscreen-vision-shade {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.1) 45%, rgba(0, 0, 0, 0.68) 100%);
+            z-index: 1;
+        }
+        .fullscreen-vision-top, .fullscreen-vision-mid, .fullscreen-vision-bottom {
+            position: relative;
+            z-index: 2;
+        }
+        .fullscreen-vision-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+            line-height: 1.6;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
+            padding: 0 10px;
+        }
     </style>
 </head>
 <body>
@@ -1000,8 +1039,6 @@
             <div id="wishAiGuideText" style="font-size: 0.92rem; color: #4c1d95; line-height: 1.5;"></div>
         </div>
     </div>
-
-    <!-- 分頁 5：記帳統計 -->
     <!-- 分頁 5：記帳統計 -->
     <div id="page-stats" class="page-section" style="display: none;">
         <div class="stats-summary-grid">
@@ -1057,7 +1094,7 @@
             </div>
         </div>
     </div>
-    
+  
     <nav class="bottom-nav">
         <a class="nav-item active" id="nav-home" onclick="switchTab('home', this)"><i class="fa-solid fa-house"></i><span>首頁</span></a>
         <a class="nav-item" id="nav-todo" onclick="switchTab('todo', this)"><i class="fa-regular fa-square-check"></i><span>待辦</span></a>
@@ -1142,7 +1179,6 @@
         targetCount: 0,
         currentCount: 0
     };
-
     // ==================== 底部選單秒切分頁邏輯 ====================
     function switchTab(tabName, navElement) {
         if (practiceState.active && tabName !== 'wish') {
@@ -1171,7 +1207,6 @@
             fetchSoulData();
         }
     }
-
     function switchTabByName(tabName) {
         const navEl = document.getElementById('nav-' + tabName);
         switchTab(tabName, navEl);
@@ -1206,7 +1241,6 @@
             loadCachedSoulData();
         }
     }
-
     function loadCachedSoulData() {
         const cached = localStorage.getItem('ai_assistant_soul_v1');
         if (cached) {
@@ -1261,7 +1295,6 @@
                 listContainer.innerHTML = html;
             }
         }
-
         // 3. 願想分頁（滿版願景板＋369 進度更新）
         const boardEl = document.getElementById('visionBoardContainer');
         const affirmEl = document.getElementById('visionAffirmationDisplay');
@@ -1284,7 +1317,11 @@
                 guideText.innerText = p.lastGuide;
             }
         }
-    }
+        // ✨ 貼在這裡：綁定單擊願景板中央開啟全螢幕清晰看圖模式
+        if (boardEl) {
+            boardEl.querySelector('.vision-board-center').onclick = openFullscreenVision;
+       }
+   } // ⬅️ 這是 function renderSoulUI() 結束的大括號
 
     function update369ButtonUI(period, doneCount, targetCount) {
         const btn = document.getElementById('btn-practice-' + period);
@@ -1297,7 +1334,6 @@
             else btn.classList.remove('done');
         }
     }
-
     function openGratitudeModal(index) {
         const list = currentSoulData.todayGratitudes || [];
         const item = list.slice(index, index + 1).pop();
@@ -1333,13 +1369,13 @@
             img.onload = function() {
                 // 自動壓縮圖片寬度至 640px，確保能順暢存入 Google 試算表儲存格
                 const canvas = document.createElement('canvas');
-                const maxWidth = 640;
+                const maxWidth = 1000;
                 const scale = img.width > maxWidth ? (maxWidth / img.width) : 1;
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                pendingWishImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
+                pendingWishImageBase64 = canvas.toDataURL('image/jpeg', 0.82);
             };
             img.src = e.target.result;
         };
@@ -1418,11 +1454,19 @@ osc.stop(ctx.currentTime + 0.35);
         runNext369Round();
     }
 
-    function runNext369Round() {
+        function runNext369Round() {
         if (!practiceState.active) return;
         const roundNum = practiceState.currentCount + 1;
+        const hintMsg = '第 ' + roundNum + ' / ' + practiceState.targetCount + ' 次：請聆聽 AI 示範，聽到「叮」聲後跟著唸...';
+
         document.getElementById('practiceCounterRing').innerText = roundNum + ' / ' + practiceState.targetCount;
-        document.getElementById('practiceGuideHint').innerText = '第 ' + roundNum + ' 次：請聆聽 AI 示範，聽到「叮」聲後跟著唸...';
+        document.getElementById('practiceGuideHint').innerText = hintMsg;
+
+        // ✨ 同步更新全螢幕願景視窗的提示文字與顯示控制按鈕
+        const fsHint = document.getElementById('fsPracticeHint');
+        const fsManualRow = document.getElementById('fsManualStopRow');
+        if (fsHint) fsHint.innerText = hintMsg;
+        if (fsManualRow) fsManualRow.style.display = 'flex';
 
         const wishSentence = currentSoulData.wishText || "我值得擁有健康、豐盛與充滿愛的美好生活！";
         const leadText = roundNum === 1 ? ('我們開始第1次練習，請跟我一起說：' + wishSentence) : ('第' + roundNum + '次：' + wishSentence);
@@ -1430,7 +1474,10 @@ osc.stop(ctx.currentTime + 0.35);
         speak(leadText, () => {
             if (!practiceState.active) return;
             playDingSound();
-            document.getElementById('practiceGuideHint').innerText = '🎙️ 請大聲覆誦您的願想（第 ' + roundNum + ' 次）...';
+            const speakNowMsg = '🎙️ 請大聲覆誦您的願想（第 ' + roundNum + ' / ' + practiceState.targetCount + ' 次）...';
+            document.getElementById('practiceGuideHint').innerText = speakNowMsg;
+            if (fsHint) fsHint.innerText = speakNowMsg;
+
             if (recognition) {
                 recognition.continuous = false;
                 recognition.interimResults = false;
@@ -1438,17 +1485,24 @@ osc.stop(ctx.currentTime + 0.35);
             }
         });
     }
-
     function handle369SpeechResult(spoken) {
         if (!practiceState.active) return;
-        document.getElementById('practiceSpeechHeard').innerText = '🎙️ 聽到您說：「' + spoken + '」';
+        const heardMsg = '🎙️ 聽到您說：「' + spoken + '」';
+        document.getElementById('practiceSpeechHeard').innerText = heardMsg;
+
+        // ✨ 同步更新全螢幕願景視窗聽到的語音字幕
+        const fsHeard = document.getElementById('fsPracticeHeard');
+        if (fsHeard) fsHeard.innerText = heardMsg;
+
         if (spoken && spoken.trim().length >= 2) {
             advance369Count();
         } else {
-            document.getElementById('practiceGuideHint').innerText = "沒聽清楚，請再唸一次或點下方手動完成喔！";
+            const retryMsg = "沒聽清楚，請再唸一次或點下方手動完成喔！";
+            document.getElementById('practiceGuideHint').innerText = retryMsg;
+            const fsHint = document.getElementById('fsPracticeHint');
+            if (fsHint) fsHint.innerText = retryMsg;
         }
     }
-
 function manualCount369Step() {
 if (!practiceState.active) return;
 if (isRecording && recognition) {
@@ -1468,43 +1522,78 @@ runNext369Round();
 }, 650);
 }
 }
-function complete369Practice() {
-const finishedPeriod = practiceState.period;
-const finishedCount = practiceState.targetCount;
-practiceState.active = false;
-document.getElementById('practiceActivePanel').style.display = 'none';
-if (!currentSoulData.progress) currentSoulData.progress = { morning: 0, afternoon: 0, evening: 0 };
-currentSoulData.progress[finishedPeriod] = finishedCount;
-renderSoulUI();
-const guideCard = document.getElementById('wishAiGuideCard');
-const guideText = document.getElementById('wishAiGuideText');
-guideCard.style.display = 'block';
-guideText.innerText = "✨ 恭喜完成本時段顯化練習！AI 正在為您撰寫專屬能量回饋...";
-speak("太棒了！您已經圓滿完成本次顯化練習，願美好的能量陪伴您一整天！");
-fetch(GAS_WEB_APP_URL, {
-method: 'POST',
-mode: 'no-cors',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-mode: 'wishPractice',
-period: finishedPeriod,
-count: finishedCount,
-wishText: currentSoulData.wishText
-})
-}).then(() => {
-setTimeout(() => {
-fetchSoulData();
-}, 2200);
-});
+    function complete369Practice() {
+        const finishedPeriod = practiceState.period;
+        const finishedCount = practiceState.targetCount;
+        practiceState.active = false;
+        document.getElementById('practiceActivePanel').style.display = 'none';
+
+        const fsManualRow = document.getElementById('fsManualStopRow');
+        const fsHint = document.getElementById('fsPracticeHint');
+        if (fsManualRow) fsManualRow.style.display = 'none';
+        if (fsHint) fsHint.innerText = '✨ 恭喜圓滿完成本時段練習！能量已傳遞給宇宙！';
+
+        if (!currentSoulData.progress) currentSoulData.progress = { morning: 0, afternoon: 0, evening: 0 };
+        currentSoulData.progress[finishedPeriod] = finishedCount;
+        renderSoulUI();
+
+        // 同步更新全螢幕視窗上的次數徽章
+        const fsBadge = document.getElementById('fs-badge-' + finishedPeriod);
+        if (fsBadge) fsBadge.innerText = finishedCount + ' / ' + finishedCount + ' ✨';
+        const guideCard = document.getElementById('wishAiGuideCard');
+        const guideText = document.getElementById('wishAiGuideText');
+        guideCard.style.display = 'block';
+        guideText.innerText = "✨ 恭喜完成本時段顯化練習！AI 正在為您撰寫專屬能量回饋...";
+        speak("太棒了！您已經圓滿完成本次顯化練習，願美好的能量陪伴您一整天！");
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'wishPractice',
+                period: finishedPeriod,
+                count: finishedCount,
+                wishText: currentSoulData.wishText
+            })
+        }).then(() => {
+            setTimeout(() => {
+                fetchSoulData();
+            }, 2200);
+        });
+    }
+
+    function stop369Practice() {
+        practiceState.active = false;
+        window.speechSynthesis.cancel();
+        if (isRecording && recognition) {
+            try { recognition.stop(); } catch (e) {}
+        }
+        document.getElementById('practiceActivePanel').style.display = 'none';
+        const fsManualRow = document.getElementById('fsManualStopRow');
+        const fsHint = document.getElementById('fsPracticeHint');
+        if (fsManualRow) fsManualRow.style.display = 'none';
+        if (fsHint) fsHint.innerText = '已停止練習，隨時可點擊下方時段重新開始';
+    }
+
+function openFullscreenVision() {
+    const fsModal = document.getElementById('fullscreenVisionModal');
+    const fsText = document.getElementById('fullscreenWishText');
+    if (currentSoulData.wishImage) {
+        fsModal.style.backgroundImage = "url('" + currentSoulData.wishImage + "')";
+    }
+    fsText.innerText = currentSoulData.wishText || "我值得擁有健康、豐盛與充滿愛的美好生活！";
+    const p = currentSoulData.progress || { morning: 0, afternoon: 0, evening: 0 };
+    document.getElementById('fs-badge-morning').innerText = p.morning + " / 3";
+    document.getElementById('fs-badge-afternoon').innerText = p.afternoon + " / 6";
+    document.getElementById('fs-badge-evening').innerText = p.evening + " / 9";
+    fsModal.style.display = 'flex';
 }
-function stop369Practice() {
-practiceState.active = false;
-window.speechSynthesis.cancel();
-if (isRecording && recognition) {
-try { recognition.stop(); } catch (e) {}
+
+function closeFullscreenVision() {
+    stop369Practice();
+    document.getElementById('fullscreenVisionModal').style.display = 'none';
 }
-document.getElementById('practiceActivePanel').style.display = 'none';
-}
+
 // ==================== 統計數據讀取與圓餅圖繪製 ====================
     async function loadStatsData() {
         const statsStatus = document.getElementById('stats-status');
@@ -1597,7 +1686,6 @@ document.getElementById('practiceActivePanel').style.display = 'none';
             statsStatus.innerText = "❌ 連線失敗，請稍後再試";
         }
     }
-
     function updateGreetingByTime() {
         const taiwanTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" });
         const hour = new Date(taiwanTime).getHours();
@@ -1921,11 +2009,12 @@ hour += 12;
 timeStr = hour.toString().padStart(2, '0') + ":" + minute;
 }
 let cleanContent = text
-.replace(/(\d+)月(\d+)[號日]?/g, "")
-.replace(/(\d+)點時?分?/g, "")
-.replace(/今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/g, "")
-.replace(/請提醒我|提醒我|記得|幫我記|通知我/g, "")
-.trim();
+    .replace(/(\d+)月(\d+)[號日]?/g, "")
+    .replace(/(\d+)[點時](\d+|半)?分?/g, "")
+    .replace(/今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/g, "")
+    .replace(/請提醒我|提醒我|記得|幫我記|通知我/g, "")
+    .trim();
+
 if (!cleanContent) cleanContent = text;
 pendingData = { mode: 'reminder', content: cleanContent, date: dateStr, time: timeStr, rawText: text };
 }
@@ -2057,5 +2146,46 @@ fetchAndRenderTodos();
 fetchSoulData();
 });
 </script>
+<!-- ✨ 全螢幕高清願景板與 369 沉浸練習視窗 -->
+<div class="fullscreen-vision-modal" id="fullscreenVisionModal">
+    <div class="fullscreen-vision-shade"></div>
+    <div class="fullscreen-vision-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="background: rgba(0,0,0,0.45); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
+            ✨ 沉浸顯化模式
+        </span>
+        <button onclick="closeFullscreenVision()" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;">
+            ✕
+        </button>
+    </div>
+
+    <div class="fullscreen-vision-mid">
+        <div class="fullscreen-vision-text" id="fullscreenWishText"></div>
+    </div>
+
+    <div class="fullscreen-vision-bottom" style="display: flex; flex-direction: column; gap: 12px;">
+        <div id="fsPracticeStatusBox" style="background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px); border-radius: 18px; padding: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.25);">
+            <div id="fsPracticeHint" style="font-size: 0.92rem; color: #fde047; font-weight: 700;">點擊下方時段開始看著圖片覆誦練習</div>
+            <div id="fsPracticeHeard" style="font-size: 0.84rem; color: #e2e8f0; margin-top: 4px;">準備就緒</div>
+        </div>
+        <div class="practice-369-grid">
+            <button class="practice-btn" onclick="start369Practice('morning', 3)">
+                <span class="practice-period-label">🌅 早間 3 次</span>
+                <span class="practice-count-badge" id="fs-badge-morning">0 / 3</span>
+            </button>
+            <button class="practice-btn" onclick="start369Practice('afternoon', 6)">
+                <span class="practice-period-label">☀️ 午間 6 次</span>
+                <span class="practice-count-badge" id="fs-badge-afternoon">0 / 6</span>
+            </button>
+            <button class="practice-btn" onclick="start369Practice('evening', 9)">
+                <span class="practice-period-label">🌙 晚間 9 次</span>
+                <span class="practice-count-badge" id="fs-badge-evening">0 / 9</span>
+            </button>
+        </div>
+        <div id="fsManualStopRow" style="display: none; gap: 10px;">
+            <button class="action-btn" style="background: #8b5cf6; padding: 10px;" onclick="manualCount369Step()">✅ 手動完成 1 次</button>
+            <button class="action-btn" style="background: #64748b; padding: 10px;" onclick="stop369Practice()">停止</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
