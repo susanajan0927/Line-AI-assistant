@@ -821,6 +821,9 @@
             text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
             padding: 0 10px;
         }
+
+
+
     </style>
 </head>
 <body>
@@ -1039,6 +1042,8 @@
             <div id="wishAiGuideText" style="font-size: 0.92rem; color: #4c1d95; line-height: 1.5;"></div>
         </div>
     </div>
+
+    <!-- 分頁 5：記帳統計 -->
     <!-- 分頁 5：記帳統計 -->
     <div id="page-stats" class="page-section" style="display: none;">
         <div class="stats-summary-grid">
@@ -1094,7 +1099,7 @@
             </div>
         </div>
     </div>
-  
+    
     <nav class="bottom-nav">
         <a class="nav-item active" id="nav-home" onclick="switchTab('home', this)"><i class="fa-solid fa-house"></i><span>首頁</span></a>
         <a class="nav-item" id="nav-todo" onclick="switchTab('todo', this)"><i class="fa-regular fa-square-check"></i><span>待辦</span></a>
@@ -1179,6 +1184,7 @@
         targetCount: 0,
         currentCount: 0
     };
+
     // ==================== 底部選單秒切分頁邏輯 ====================
     function switchTab(tabName, navElement) {
         if (practiceState.active && tabName !== 'wish') {
@@ -1207,6 +1213,7 @@
             fetchSoulData();
         }
     }
+
     function switchTabByName(tabName) {
         const navEl = document.getElementById('nav-' + tabName);
         switchTab(tabName, navEl);
@@ -1241,6 +1248,7 @@
             loadCachedSoulData();
         }
     }
+
     function loadCachedSoulData() {
         const cached = localStorage.getItem('ai_assistant_soul_v1');
         if (cached) {
@@ -1295,6 +1303,7 @@
                 listContainer.innerHTML = html;
             }
         }
+
         // 3. 願想分頁（滿版願景板＋369 進度更新）
         const boardEl = document.getElementById('visionBoardContainer');
         const affirmEl = document.getElementById('visionAffirmationDisplay');
@@ -1334,6 +1343,7 @@
             else btn.classList.remove('done');
         }
     }
+
     function openGratitudeModal(index) {
         const list = currentSoulData.todayGratitudes || [];
         const item = list.slice(index, index + 1).pop();
@@ -1485,6 +1495,7 @@ osc.stop(ctx.currentTime + 0.35);
             }
         });
     }
+
     function handle369SpeechResult(spoken) {
         if (!practiceState.active) return;
         const heardMsg = '🎙️ 聽到您說：「' + spoken + '」';
@@ -1503,6 +1514,8 @@ osc.stop(ctx.currentTime + 0.35);
             if (fsHint) fsHint.innerText = retryMsg;
         }
     }
+
+
 function manualCount369Step() {
 if (!practiceState.active) return;
 if (isRecording && recognition) {
@@ -1540,11 +1553,14 @@ runNext369Round();
         // 同步更新全螢幕視窗上的次數徽章
         const fsBadge = document.getElementById('fs-badge-' + finishedPeriod);
         if (fsBadge) fsBadge.innerText = finishedCount + ' / ' + finishedCount + ' ✨';
+
         const guideCard = document.getElementById('wishAiGuideCard');
         const guideText = document.getElementById('wishAiGuideText');
         guideCard.style.display = 'block';
         guideText.innerText = "✨ 恭喜完成本時段顯化練習！AI 正在為您撰寫專屬能量回饋...";
+
         speak("太棒了！您已經圓滿完成本次顯化練習，願美好的能量陪伴您一整天！");
+
         fetch(GAS_WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -1686,6 +1702,7 @@ function closeFullscreenVision() {
             statsStatus.innerText = "❌ 連線失敗，請稍後再試";
         }
     }
+
     function updateGreetingByTime() {
         const taiwanTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" });
         const hour = new Date(taiwanTime).getHours();
