@@ -821,8 +821,40 @@
             text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
             padding: 0 10px;
         }
-
-
+        /* ✨ 全螢幕賞圖模式：文字預設淡化 35%，點擊螢幕可完全隱藏賞圖 */
+        .fullscreen-vision-shade {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.02) 55%, rgba(0, 0, 0, 0.45) 100%) !important;
+            transition: opacity 0.3s ease;
+        }
+        .fullscreen-vision-text {
+            opacity: 0.35;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .fullscreen-vision-modal.pure-photo-mode .fullscreen-vision-text,
+        .fullscreen-vision-modal.pure-photo-mode .fullscreen-vision-bottom,
+        .fullscreen-vision-modal.pure-photo-mode .fullscreen-vision-shade {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+        .music-toggle-btn {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .music-toggle-btn.playing {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-color: #fde68a;
+        }
 
     </style>
 </head>
@@ -978,15 +1010,19 @@
         <div class="vision-board-full" id="visionBoardContainer">
             <div class="vision-board-overlay"></div>
             
-            <div class="vision-board-top">
+                        <div class="vision-board-top">
                 <span style="font-size: 0.85rem; font-weight: 700; background: rgba(0,0,0,0.35); padding: 4px 12px; border-radius: 16px;">
                     🌟 我的顯化願景板
                 </span>
-                <button class="vision-edit-btn" onclick="openWishEditModal()">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> 設定圖文
-                </button>
+                <div style="display: flex; gap: 6px;">
+                    <button class="music-toggle-btn" id="wishMusicToggleBtn" onclick="toggleWishMusic(event)">
+                        🎵 音樂：關
+                    </button>
+                    <button class="vision-edit-btn" onclick="openWishEditModal()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 設定圖文
+                    </button>
+                </div>
             </div>
-
             <div class="vision-board-center">
                 <div class="vision-affirmation-text" id="visionAffirmationDisplay">
                     我值得擁有健康、豐盛與充滿愛的美好生活！
@@ -1140,13 +1176,18 @@
             <input type="file" id="wishImageFileInput" accept="image/*" style="font-size: 0.88rem; width: 100%;" onchange="handleWishImageSelect(event)">
             <p style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">系統會自動幫您壓縮優化，並同步儲存到雲端試算表喔！</p>
         </div>
+        <div>
+            <label style="font-size: 0.88rem; font-weight: 700; color: #4c1d95; display: block; margin-bottom: 6px;">3. 背景輕音樂（貼上 YouTube 網址，可留空）：</label>
+            <input type="text" id="wishMusicUrlInput" style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font-size: 0.9rem;" placeholder="例如：https://youtu.be">
+            <p style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">貼上 YouTube 連結後，在願想頁點擊「🎵 音樂」即可純播聲音喔！</p>
+        </div>
         <button class="action-btn" id="saveWishBtn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);" onclick="saveWishSettings()">
             💾 儲存願想設定
         </button>
     </div>
 </div>
 <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwzSJbLKmH9N25FSuo-LI1iy7AXNt50wS93IBw8gKP9L7ZKD0nlL6gE7Aur2qWLyJ5Gag/exec";    
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwTze1BRPpUxJfJK_0TVPJK1R9ZT-DnTjw_z0jRj2pM9DzoBu8S1gvQyWytwNXdoeWxlw/exec";    
  
     const micWrapper = document.getElementById('micWrapper');
     const micButton = document.getElementById('micButton');
@@ -1173,6 +1214,7 @@
         todayGratitudes: [],
         wishText: "我值得擁有健康、豐盛與充滿愛的美好生活！",
         wishImage: "",
+        wishMusic: "",
         progress: { morning: 0, afternoon: 0, evening: 0, lastGuide: "" }
     };
     let pendingWishImageBase64 = "";
@@ -1368,6 +1410,7 @@
         document.getElementById('wishTextInput').value = currentSoulData.wishText || "";
         pendingWishImageBase64 = currentSoulData.wishImage || "";
         document.getElementById('wishEditModal').style.display = 'flex';
+        document.getElementById('wishMusicUrlInput').value = currentSoulData.wishMusic || "";
     }
 
     function handleWishImageSelect(event) {
@@ -1391,42 +1434,47 @@
         };
         reader.readAsDataURL(file);
     }
-
     function saveWishSettings() {
         const newText = document.getElementById('wishTextInput').value.trim();
+        const newMusic = document.getElementById('wishMusicUrlInput').value.trim();
         if (!newText) {
             alert("請輸入您的願想肯定語文字喔！");
-return;
-}
-const saveBtn = document.getElementById('saveWishBtn');
-saveBtn.innerText = "⏳ 正在儲存至雲端...";
-saveBtn.disabled = true;
-currentSoulData.wishText = newText;
-if (pendingWishImageBase64) {
-currentSoulData.wishImage = pendingWishImageBase64;
-}
-localStorage.setItem('ai_assistant_soul_v1', JSON.stringify(currentSoulData));
-renderSoulUI();
-fetch(GAS_WEB_APP_URL, {
-method: 'POST',
-mode: 'no-cors',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-mode: 'saveWish',
-wishText: newText,
-wishImage: pendingWishImageBase64
-})
-}).then(() => {
-saveBtn.innerText = "💾 儲存願想設定";
-saveBtn.disabled = false;
-closeModal('wishEditModal');
-speak("願想願景板已經更新完成，祝福您心想事成！");
-}).catch(() => {
-saveBtn.innerText = "💾 儲存願想設定";
-saveBtn.disabled = false;
-closeModal('wishEditModal');
-});
-}
+            return;
+        }
+        const saveBtn = document.getElementById('saveWishBtn');
+        saveBtn.innerText = "⏳ 正在儲存至雲端...";
+        saveBtn.disabled = true;
+
+        currentSoulData.wishText = newText;
+        currentSoulData.wishMusic = newMusic;
+        if (pendingWishImageBase64) {
+            currentSoulData.wishImage = pendingWishImageBase64;
+        }
+        localStorage.setItem('ai_assistant_soul_v1', JSON.stringify(currentSoulData));
+        renderSoulUI();
+
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'saveWish',
+                wishText: newText,
+                wishImage: pendingWishImageBase64,
+                wishMusic: newMusic
+            })
+        }).then(() => {
+            saveBtn.innerText = "💾 儲存願想設定";
+            saveBtn.disabled = false;
+            closeModal('wishEditModal');
+            speak("願想願景板已經更新完成，祝福您心想事成！");
+        }).catch(() => {
+            saveBtn.innerText = "💾 儲存願想設定";
+            saveBtn.disabled = false;
+            closeModal('wishEditModal');
+        });
+    }
+
 // ==================== ✨ 369 語音引導覆誦練習引擎 ====================
 function playDingSound() {
 try {
@@ -1514,7 +1562,6 @@ osc.stop(ctx.currentTime + 0.35);
             if (fsHint) fsHint.innerText = retryMsg;
         }
     }
-
 
 function manualCount369Step() {
 if (!practiceState.active) return;
@@ -1609,6 +1656,99 @@ function closeFullscreenVision() {
     stop369Practice();
     document.getElementById('fullscreenVisionModal').style.display = 'none';
 }
+    // ==================== ✨ YouTube 背景輕音樂播放器（純播聲音＋開關控制） ====================
+    let ytPlayer = null;
+    let isWishMusicPlaying = false;
+    let ytApiReady = false;
+
+    // 動態載入 YouTube IFrame API
+        (function loadYouTubeAPI() {
+        const tag = document.createElement('script');
+        const ytSub = "www.youtube";
+        const ytHost = ytSub + ".com";
+        tag.src = "https://" + ytHost + "/iframe_api";
+        const firstScript = document.getElementsByTagName('script')[0];
+        firstScript.parentNode.insertBefore(tag, firstScript);
+    })();
+    function onYouTubeIframeAPIReady() {
+        ytApiReady = true;
+    }
+
+    function extractYouTubeVideoId(url) {
+        if (!url) return "";
+        const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = url.match(regExp);
+        return match ? match[1] : "";
+    }
+
+    function updateMusicButtonUI() {
+        const label = isWishMusicPlaying ? "🎵 音樂：開" : "🎵 音樂：關";
+        ['wishMusicToggleBtn', 'fsMusicToggleBtn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.innerText = label;
+                if (isWishMusicPlaying) btn.classList.add('playing');
+                else btn.classList.remove('playing');
+            }
+        });
+    }
+
+    function toggleWishMusic(event) {
+        if (event) event.stopPropagation();
+        const videoId = extractYouTubeVideoId(currentSoulData.wishMusic);
+        if (!videoId) {
+            alert("尚未設定背景音樂網址喔！請先點擊「設定圖文」貼上 YouTube 連結。");
+            openWishEditModal();
+            return;
+        }
+
+        if (!ytPlayer && ytApiReady) {
+            ytPlayer = new YT.Player('ytAudioPlayer', {
+                height: '1',
+                width: '1',
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1,
+                    loop: 1,
+                    playlist: videoId,
+                    playsinline: 1
+                },
+                events: {
+                    onReady: function(e) {
+                        e.target.playVideo();
+                        isWishMusicPlaying = true;
+                        updateMusicButtonUI();
+                    }
+                }
+            });
+            return;
+        }
+
+        if (ytPlayer) {
+            if (isWishMusicPlaying) {
+                ytPlayer.pauseVideo();
+                isWishMusicPlaying = false;
+            } else {
+                const currentLoadedId = ytPlayer.getVideoData ? ytPlayer.getVideoData().video_id : "";
+                if (currentLoadedId !== videoId) {
+                    ytPlayer.loadVideoById({ videoId: videoId, startSeconds: 0 });
+                } else {
+                    ytPlayer.playVideo();
+                }
+                isWishMusicPlaying = true;
+            }
+            updateMusicButtonUI();
+        }
+    }
+
+    // ✨ 全螢幕賞圖模式：單擊空白背景處一鍵隱藏/顯示文字與面板
+    function togglePurePhotoMode(event) {
+        const fsModal = document.getElementById('fullscreenVisionModal');
+        if (!fsModal) return;
+        // 如果點到的是按鈕，不切換隱藏狀態
+        if (event.target.closest('button')) return;
+        fsModal.classList.toggle('pure-photo-mode');
+    }
 
 // ==================== 統計數據讀取與圓餅圖繪製 ====================
     async function loadStatsData() {
@@ -2164,17 +2304,19 @@ fetchSoulData();
 });
 </script>
 <!-- ✨ 全螢幕高清願景板與 369 沉浸練習視窗 -->
-<div class="fullscreen-vision-modal" id="fullscreenVisionModal">
+<div class="fullscreen-vision-modal" id="fullscreenVisionModal" onclick="togglePurePhotoMode(event)">
     <div class="fullscreen-vision-shade"></div>
     <div class="fullscreen-vision-top" style="display: flex; justify-content: space-between; align-items: center;">
         <span style="background: rgba(0,0,0,0.45); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
             ✨ 沉浸顯化模式
         </span>
+       <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="music-toggle-btn" id="fsMusicToggleBtn" onclick="toggleWishMusic(event)">🎵 音樂：關</button>
         <button onclick="closeFullscreenVision()" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;">
             ✕
         </button>
-    </div>
-
+    </div>        
+  </div>
     <div class="fullscreen-vision-mid">
         <div class="fullscreen-vision-text" id="fullscreenWishText"></div>
     </div>
@@ -2203,6 +2345,10 @@ fetchSoulData();
             <button class="action-btn" style="background: #64748b; padding: 10px;" onclick="stop369Practice()">停止</button>
         </div>
     </div>
+</div>
+<!-- 隱藏版 YouTube 純背景音樂播放器 -->
+<div id="ytHiddenPlayerWrap" style="position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; z-index: -1;">
+    <div id="ytAudioPlayer"></div>
 </div>
 </body>
 </html>
