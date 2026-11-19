@@ -963,6 +963,9 @@
                 </button>
             </div>
             <div class="voice-hint-text" id="voiceHint">請點擊麥克風開始</div>
+            <button type="button" id="langSwitchBtn" onclick="toggleRecognitionLang()" style="background: rgba(255,255,255,0.85); border: 1px solid #bfdbfe; color: #2563eb; padding: 4px 12px; border-radius: 16px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                🌐 語音辨識：中文 (點擊切英文)
+            </button>
         </div>
     </div>
 
@@ -1185,8 +1188,7 @@
     </div>
 </div>
 <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwTze1BRPpUxJfJK_0TVPJK1R9ZT-DnTjw_z0jRj2pM9DzoBu8S1gvQyWytwNXdoeWxlw/exec";    
- 
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxr7tUphMaJD8sDYRa192Hm9zDTqrePIcq15PNRPtSpMcOnvYwVq0j-00WIZ_bcU3xtZA/exec";     
     const micWrapper = document.getElementById('micWrapper');
     const micButton = document.getElementById('micButton');
     const statusText = document.getElementById('status');
@@ -1205,6 +1207,19 @@
     let silenceTimer = null;
     let finalTranscriptBuffer = "";
     let expenseChartInstance = null;
+    let currentRecognitionLang = 'zh-TW';
+    function toggleRecognitionLang() {
+        currentRecognitionLang = (currentRecognitionLang === 'zh-TW') ? 'en-US' : 'zh-TW';
+        if (recognition) {
+            recognition.lang = currentRecognitionLang;
+        }
+        const btn = document.getElementById('langSwitchBtn');
+        if (btn) {
+            btn.innerText = currentRecognitionLang === 'zh-TW'
+                ? "🌐 語音辨識：中文 (點擊切英文)"
+                : "🌐 Voice Lang: English (Tap for 中文)";
+        }
+    }
 
     // ✨ 感恩與願想全域狀態
     let currentSoulData = {
@@ -2078,20 +2093,27 @@ recognition.stop();
 }
 }
 });
-function speak(message, callback) {
-if ('speechSynthesis' in window) {
-window.speechSynthesis.cancel();
-const utterance = new SpeechSynthesisUtterance(message);
-utterance.lang = 'zh-TW';
-utterance.rate = 1.0;
-if (callback) {
-utterance.onend = callback;
-}
-window.speechSynthesis.speak(utterance);
-} else if (callback) {
-callback();
-}
-}
+    function speak(message, callback) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            // 過濾所有 Emoji 與特殊符號，讓畫面保留可愛符號、語音只唸純文字
+            const cleanSpeechText = String(message)
+                .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
+                .replace(/＋/g, '，')
+                .trim();
+            const utterance = new SpeechSynthesisUtterance(cleanSpeechText);
+            // 若內容為純英文，自動用英文語音朗讀
+            const isEng = /^[A-Za-z0-9\s.,!?'"-]+$/.test(cleanSpeechText);
+            utterance.lang = isEng ? 'en-US' : 'zh-TW';
+            utterance.rate = 1.0;
+            if (callback) {
+                utterance.onend = callback;
+            }
+            window.speechSynthesis.speak(utterance);
+        } else if (callback) {
+            callback();
+        }
+    }
 function numberToChinese(numStr) {
 let num = parseInt(numStr, 10);
 if (isNaN(num) || num === 0) return "零";
@@ -2126,7 +2148,7 @@ const timeMatch = text.match(/(\d+)[點時](\d+|半)?/);
 const hasRelativeTime = /今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/.test(text);
 const hasReminderKeyword = /提醒|叫我|通知|記得|別忘|不要忘|行程|預約|開會|看診|領藥|吃藥/.test(text);
 // ✨ 新增：感恩關鍵字識別
-const hasGratitudeKeyword = /感恩|感謝|感動|感覺|感受|感觸|領受|領悟|謝謝|打動|心動|觸動|觸發|感到|thank you/.test(text);
+const hasGratitudeKeyword = /感恩|感謝|感動|感覺|感受|感觸|領受|領悟|謝謝|打動|心動|觸動|觸發|感到|thank|grateful|gratitude|thankful|blessed|appreciate|wonderful|happy/i.test(text);
 if (hasExpenseKeyword && amountMatch && !timeMatch) {
 const amount = amountMatch.slice(0, 1).pop();
 let protectedText = text.replace(/買菜/g, "BUY_VEG");
