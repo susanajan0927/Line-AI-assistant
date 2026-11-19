@@ -1077,9 +1077,7 @@
             </div>
             <div id="wishAiGuideText" style="font-size: 0.92rem; color: #4c1d95; line-height: 1.5;"></div>
         </div>
-    </div>
-
-    <!-- 分頁 5：記帳統計 -->
+    </div> 
     <!-- 分頁 5：記帳統計 -->
     <div id="page-stats" class="page-section" style="display: none;">
         <div class="stats-summary-grid">
@@ -1222,6 +1220,7 @@
     // ✨ 369 語音練習狀態
     let practiceState = {
         active: false,
+        justFinished: false,
         period: "",
         targetCount: 0,
         currentCount: 0
@@ -1499,6 +1498,7 @@ osc.stop(ctx.currentTime + 0.35);
         const periodNames = { morning: '🌅 早間 3 次顯化練習', afternoon: '☀️ 午間 6 次顯化練習', evening: '🌙 晚間 9 次顯化練習' };
         practiceState = {
             active: true,
+            justFinished: false, 
             period: period,
             targetCount: targetCount,
             currentCount: 0
@@ -1586,6 +1586,8 @@ runNext369Round();
         const finishedPeriod = practiceState.period;
         const finishedCount = practiceState.targetCount;
         practiceState.active = false;
+        practiceState.justFinished = true;
+        setTimeout(() => { practiceState.justFinished = false; }, 1500);
         document.getElementById('practiceActivePanel').style.display = 'none';
 
         const fsManualRow = document.getElementById('fsManualStopRow');
@@ -1618,13 +1620,16 @@ runNext369Round();
                 count: finishedCount,
                 wishText: currentSoulData.wishText
             })
-        }).then(() => {
+                }).then(() => {
             setTimeout(() => {
-                fetchSoulData();
+                fetchSoulData().then(() => {
+                    if (currentSoulData.progress && currentSoulData.progress.lastGuide) {
+                        speak(currentSoulData.progress.lastGuide);
+                    }
+                });
             }, 2200);
         });
     }
-
     function stop369Practice() {
         practiceState.active = false;
         window.speechSynthesis.cancel();
@@ -1963,7 +1968,7 @@ recognition.lang = 'zh-TW';
 recognition.onstart = () => {
 isRecording = true;
 finalTranscriptBuffer = "";
-if (practiceState.active) return;
+if (practiceState.active || practiceState.justFinished) return;
 if (isConfirmStage) {
 micButton.classList.remove('recording');
 micButton.classList.add('confirming');
@@ -1981,6 +1986,7 @@ voiceHint.innerText = "聆聽中（再點一次可提前結束）";
 }
 };
 recognition.onresult = (event) => {
+    if (practiceState.justFinished) return; // ⬅️ 建議在第一行補上這句，防止最後一次唸完的殘留尾音觸發首頁指令
 let interimTranscript = "";
 let currentFinal = "";
 for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -2025,7 +2031,7 @@ micButton.classList.remove('recording');
 micButton.classList.remove('confirming');
 micWrapper.classList.remove('recording');
 micWrapper.classList.remove('confirming');
-if (practiceState.active) return;
+if (practiceState.active || practiceState.justFinished) return;
 if (!isConfirmStage) {
 const spokenText = finalTranscriptBuffer.trim() || resultText.innerText.replace("🎙️ 即時字幕：", "").trim();
 if (spokenText && spokenText !== "識別結果與解析顯示在這裡...") {
@@ -2044,7 +2050,7 @@ micButton.classList.remove('recording');
 micButton.classList.remove('confirming');
 micWrapper.classList.remove('recording');
 micWrapper.classList.remove('confirming');
-if (practiceState.active) return;
+if (practiceState.active || practiceState.justFinished) return;
 if (event.error === 'not-allowed') {
 statusText.innerText = "❌ 麥克風權限被拒絕，請在瀏覽器設定中允許";
 } else {
