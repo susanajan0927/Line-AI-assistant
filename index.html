@@ -2120,7 +2120,7 @@ const timeMatch = text.match(/(\d+)[點時](\d+|半)?/);
 const hasRelativeTime = /今天|今日|明天|明日|後天|早上|上午|中午|下午|晚上|晚間|半夜|凌晨|待會|等一下|稍後/.test(text);
 const hasReminderKeyword = /提醒|叫我|通知|記得|別忘|不要忘|行程|預約|開會|看診|領藥|吃藥/.test(text);
 // ✨ 新增：感恩關鍵字識別
-const hasGratitudeKeyword = /感恩|感謝|幸福|心曠神怡|謝謝|真好|好開心|好溫暖|美好|幸運|知足/.test(text);
+const hasGratitudeKeyword = /感恩|感謝|感動|感覺|感受|感觸|領受|領悟|謝謝|打動|心動|觸動|觸發|感到|thank you/.test(text);
 if (hasExpenseKeyword && amountMatch && !timeMatch) {
 const amount = amountMatch.slice(0, 1).pop();
 let protectedText = text.replace(/買菜/g, "BUY_VEG");
