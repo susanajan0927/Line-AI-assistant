@@ -2251,7 +2251,8 @@ resetToInitial();
 });
 return;
 }
-if (text.includes("對") || text.includes("是") || text.includes("正確") || text.includes("好") || text.includes("ok") || text.includes("OK")) {
+const lowerText = text.toLowerCase();
+if (lowerText.includes("對") || lowerText.includes("是") || lowerText.includes("正確") || lowerText.includes("好") || lowerText.includes("ok") || lowerText.includes("yes") || lowerText.includes("yeah") || lowerText.includes("sure")) {
 if (!savedPendingData) {
 resetToInitial();
 return;
