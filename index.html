@@ -1035,7 +1035,7 @@
         </div>
     </div>
 
-    <!-- ✨ 分頁 3：每日感恩記錄 -->
+    <!-- ✨ 分頁 3：每日感恩紀錄 -->
     <div id="page-gratitude" class="page-section" style="display: none;">
         <div class="card" style="background: rgba(255, 253, 245, 0.94);">
             <div class="card-header">
@@ -1043,7 +1043,7 @@
                     <i class="fa-solid fa-heart" style="color: #f59e0b; font-size: 1.2rem;"></i>
                     <span>今日感恩日記</span>
                 </div>
-                <button class="refresh-btn" onclick="fetchSoulData()" title="同步感恩記錄">
+                <button class="refresh-btn" onclick="fetchSoulData()" title="同步感恩紀錄">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
@@ -1264,17 +1264,23 @@
                 <span style="font-size: 0.78rem; font-weight: 500; opacity: 0.9;">點擊撥珠計數</span>
             </button>
 
-            <!-- 寫入後台按鈕 -->
-            <button type="button" id="saveChantBtn" class="action-btn" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); margin-top: 6px;" onclick="saveChantRecord()">
-                ☁️ 儲存本次唸佛記錄
-            </button>
+            <!-- 寫入後台與手動 LINE 彙整推播雙按鈕 -->
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button type="button" id="saveChantBtn" class="action-btn" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); flex: 1; padding: 12px 8px; font-size: 0.88rem;" onclick="saveChantRecord()">
+                    ☁️ 儲存本次唸佛紀錄
+                </button>
+                <button type="button" id="pushDailyChantBtn" class="action-btn" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); flex: 1; padding: 12px 8px; font-size: 0.88rem;" onclick="sendDailyChantLineNotify()">
+                    📲 當日累計推播通知
+                </button>
+            </div>
+
         </div>
         <!-- ✨ 今日與歷史唸佛累計統計清單（獨立在下方的新卡片） -->
         <div class="card chant-card" style="margin-top: 2px;">
             <div class="card-header">
                 <div class="card-title" style="color: #92400e;">
                     <i class="fa-solid fa-scroll" style="color: #d97706; font-size: 1.15rem;"></i>
-                    <span>功德累計卡</span>
+                    <span>功德累計簿</span>
                 </div>
                 <button type="button" class="refresh-btn" style="background: #fef3c7; border-color: #fcd34d; color: #b45309;" onclick="fetchChantStats()" title="重新同步功德統計">
                     <i class="fa-solid fa-rotate-right"></i>
@@ -1373,7 +1379,7 @@
 </div>
 
 <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_32gHpy3IRfMMXcOsUKHV6IExCFIrjj9pHIRTQYC_xUyHzrX34mkrAZUsN_HuwLw0ug/exec";     
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw-GGzOiHOqdzscI2vjCkHMol2YrhetRFwy85-0a0PhQOaiIeiwVk08GEc87YjE_8wPNg/exec";     
     const micWrapper = document.getElementById('micWrapper');
     const micButton = document.getElementById('micButton');
     const statusText = document.getElementById('status');
@@ -1533,7 +1539,7 @@
                 let html = '';
                 list.forEach((item, idx) => {
                     const clampClass = shouldClamp ? 'clamp-2' : '';
-                    const moreHint = shouldClamp ? '<span style="color:#d97706; font-weight:700;">點擊查看完整內容 & AI 暖心迴響 ↗</span>' : '<span>✨ 今日微光記錄</span>';
+                    const moreHint = shouldClamp ? '<span style="color:#d97706; font-weight:700;">點擊查看完整內容 & AI 暖心迴響 ↗</span>' : '<span>✨ 今日微光紀錄</span>';
                     html += `
                         <div class="gratitude-item-card" onclick="openGratitudeModal(${idx})">
                             <div class="gratitude-time-badge">
@@ -2775,10 +2781,11 @@ resetToInitial();
             alert("目前還沒有唸誦次數或時間可以儲存喔！");
             return;
         }
+   
         const title = document.getElementById('chantNameInput').value.trim() || "南無阿彌陀佛";
         const ytUrl = document.getElementById('chantYtUrlInput').value.trim();
         const dedication = document.getElementById('chantDedicationInput').value.trim() ||
-            "願以此功德，莊嚴佛淨土，上報四重恩，下濟三塗苦。若有見聞者，悉發菩提心，盡此一報身，同生極樂國。";
+       "願以此功德，莊嚴佛淨土，上報四重恩，下濟三塗苦。若有見聞者，悉發菩提心，盡此一報身，同生極樂國。";
 
         localStorage.setItem('ai_chant_name', title);
         if (ytUrl) localStorage.setItem('ai_chant_yt', ytUrl);
@@ -2804,12 +2811,12 @@ resetToInitial();
                 dedication: dedication
             })
         }).then(() => {
-            saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
+                        saveBtn.innerText = "☁️ 儲存本次唸佛紀錄";
             saveBtn.disabled = false;
 
             // 顯示功德圓滿彈出視窗並語音恭讀迴向文
             document.getElementById('modalChantSummary').innerText =
-                `📿 ${title} ｜ 圓滿 ${finishedCount} 遍（已同步試算表並推播 LINE）`;
+                `📿 ${title} ｜ 圓滿 ${finishedCount} 遍（已同步儲存至試算表）`;
             document.getElementById('modalChantDedicationText').innerText = dedication;
             document.getElementById('chantCompleteModal').style.display = 'flex';
 
@@ -2821,9 +2828,40 @@ resetToInitial();
                 fetchChantStats();
             }, 1800);
         }).catch(() => {
-            saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
+            saveBtn.innerText = "☁️ 儲存本次唸佛紀錄";
             saveBtn.disabled = false;
             alert("儲存請求已送出，請稍後至試算表確認！");
+        });
+    }
+ 
+// 6-2. 手動觸發發送「當日累計唸佛摘要」至 LINE
+    function sendDailyChantLineNotify() {
+        const todayTotalText = document.getElementById('chantTodayTotal')?.innerText || "0";
+        if (todayTotalText === "0") {
+            if (!confirm("目前畫面顯示今日累計為 0 遍，仍要發送今日唸佛摘要推播至 LINE 嗎？")) return;
+        } else {
+            if (!confirm(`確定要將今日累計（${todayTotalText} 遍）的唸佛摘要推播通知到 LINE 嗎？`)) return;
+        }
+
+        const pushBtn = document.getElementById('pushDailyChantBtn');
+        pushBtn.innerText = "⏳ 正在推播 LINE...";
+        pushBtn.disabled = true;
+
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'sendDailyChantSummary'
+            })
+        }).then(() => {
+            pushBtn.innerText = "📲 當日累計推播通知";
+            pushBtn.disabled = false;
+            alert("✅ 已將今日唸佛累計摘要發送至您的 LINE 官方帳號囉！");
+        }).catch(() => {
+            pushBtn.innerText = "📲 當日累計推播通知";
+            pushBtn.disabled = false;
+            alert("推播請求已送出，請查看您的 LINE 訊息！");
         });
     }
 
