@@ -1186,13 +1186,23 @@
     </div>
         <!-- ✨ 分頁 7：唸佛計數與梵音學習 -->
     <div id="page-chant" class="page-section" style="display: none;">
-        <div class="card chant-card">
+               <div class="card chant-card">
             <div class="card-header">
                 <div class="card-title" style="color: #92400e;">
                     <i class="fa-solid fa-hands-praying" style="color: #d97706; font-size: 1.2rem;"></i>
                     <span>線上唸佛共修</span>
                 </div>
                 <span style="font-size: 0.78rem; background: #fde68a; color: #92400e; padding: 3px 10px; border-radius: 12px; font-weight: 700;">隨喜功德</span>
+            </div>
+
+            <!-- 📖 常用經咒快速下拉選單 -->
+            <div style="background: rgba(255, 255, 255, 0.72); border: 1px dashed #f59e0b; border-radius: 14px; padding: 10px 12px; margin-bottom: 12px;">
+                <label style="font-size: 0.84rem; font-weight: 800; color: #92400e; display: block; margin-bottom: 5px;">
+                    📖 快速切換常用經咒（自動帶入連結與迴向文）：
+                </label>
+                <select id="chantPresetSelect" class="chant-input" style="margin-top: 0; font-weight: 700; cursor: pointer;" onchange="applyChantPreset()">
+                    <option value="">-- 請選擇常用經咒或下方自行輸入 --</option>
+                </select>
             </div>
 
             <!-- 經咒名稱與 YT 學習連結設定 -->
@@ -1205,6 +1215,16 @@
                     <label style="font-size: 0.84rem; font-weight: 700; color: #92400e;">🎧 梵音學習 YouTube 連結（可選填）：</label>
                     <input type="text" id="chantYtUrlInput" class="chant-input" placeholder="貼上 YouTube 唸誦學習網址...">
                 </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="font-size: 0.84rem; font-weight: 700; color: #92400e;">🌸 本次功德迴向文（可自由修改）：</label>
+                        <button type="button" onclick="saveCurrentAsChantPreset()" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 3px 9px; border-radius: 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
+                            ➕ 存為常用經咒
+                        </button>
+                    </div>
+                    <textarea id="chantDedicationInput" class="chant-input" style="min-height: 76px; line-height: 1.45; resize: vertical;">願以此功德，莊嚴佛淨土，上報四重恩，下濟三塗苦。若有見聞者，悉發菩提心，盡此一報身，同生極樂國。</textarea>
+                </div>
+
                 <div style="display: flex; gap: 8px; margin-top: 2px;">
                     <button type="button" id="btnChantListen" class="action-btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 10px; font-size: 0.88rem; flex: 1;" onclick="startChantYtListen()">
                         🎧 聽取梵音學習
@@ -1249,7 +1269,6 @@
                 ☁️ 儲存本次唸佛功德紀錄
             </button>
         </div>
-
         <!-- ✨ 今日與歷史唸佛累計統計清單（獨立在下方的新卡片） -->
         <div class="card chant-card" style="margin-top: 2px;">
             <div class="card-header">
@@ -1305,7 +1324,6 @@
         <button class="action-btn" style="background: #f59e0b;" onclick="closeModal('gratitudeDetailModal')">收下這份溫暖 ✨</button>
     </div>
 </div>
-
 <!-- 彈出視窗 2：設定滿版願景板圖片與肯定語 -->
 <div class="modal-backdrop" id="wishEditModal" onclick="closeModal('wishEditModal')">
     <div class="modal-card" onclick="event.stopPropagation()">
@@ -1332,8 +1350,30 @@
         </button>
     </div>
 </div>
+
+<!-- 彈出視窗 3：唸佛功德圓滿與語音迴向視窗 -->
+<div class="modal-backdrop" id="chantCompleteModal" onclick="closeChantCompleteModal()">
+    <div class="modal-card" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 2px solid #f59e0b;" onclick="event.stopPropagation()">
+        <div class="modal-title" style="color: #92400e;">
+            <span>🙏 隨喜功德・圓滿迴向</span>
+            <button class="modal-close" onclick="closeChantCompleteModal()">✕</button>
+        </div>
+        <div id="modalChantSummary" style="font-size: 0.92rem; color: #78350f; font-weight: 700; background: rgba(255,255,255,0.8); padding: 10px 12px; border-radius: 12px;"></div>
+        <div style="font-size: 0.84rem; font-weight: 700; color: #b45309;">🔊 正在為您恭讀迴向文：</div>
+        <div id="modalChantDedicationText" style="font-size: 1.02rem; color: #451a03; line-height: 1.7; white-space: pre-wrap; background: #ffffff; padding: 14px; border-radius: 16px; border: 1px solid #fcd34d;"></div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="action-btn" style="background: #d97706; flex: 1;" onclick="replayChantDedication()">
+                🔊 再聽一次迴向
+            </button>
+            <button type="button" class="action-btn" style="background: #16a34a; flex: 1;" onclick="closeChantCompleteModal()">
+                圓滿合十 ✨
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2xLZ1nfGvjYAgfFe9MseLVpMreIYXuKrALeud8FEAmaaNQgSXlDTPZksfXQ6Qjbfwig/exec";     
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_32gHpy3IRfMMXcOsUKHV6IExCFIrjj9pHIRTQYC_xUyHzrX34mkrAZUsN_HuwLw0ug/exec";     
     const micWrapper = document.getElementById('micWrapper');
     const micButton = document.getElementById('micButton');
     const statusText = document.getElementById('status');
@@ -1385,7 +1425,7 @@
         targetCount: 0,
         currentCount: 0
     };
-
+        
     // ==================== 底部選單秒切分頁邏輯 ====================
     function switchTab(tabName, navElement) {
         if (practiceState.active && tabName !== 'wish') {
@@ -2475,19 +2515,145 @@ console.error(err);
 resetToInitial();
 });
 }
-    // ==================== ✨ 唸佛計數器、計時器與 YT 梵音學習 ====================
+      // ==================== ✨ 唸佛計數器、計時器、常用選單與語音迴向 ====================
     let chantCount = 0;
     let chantSeconds = 0;
     let chantTimerInterval = null;
     let isChantTiming = false;
     let isChantYtPlaying = false;
 
-    // 載入上次儲存的經咒名稱與 YT 連結
+    // 內建預設常用經咒與對應迴向文（使用者可隨時新增/修改並同步雲端）
+    const DEFAULT_CHANT_PRESETS = [
+        {
+            title: "梵音 心經咒",
+            ytUrl: "https://www.youtube.com/watch?v=KJoR5C7bbZE",
+            dedication: "願以此持誦心經之功德，開啟無上智慧，照見五蘊皆空，度一切苦厄，迴向法界眾生與家人身心安樂、福慧增長。"
+        },
+        {
+            title: "梵音 地藏王菩薩滅定業真言",
+            ytUrl: "https://www.youtube.com/watch?v=5XZJZ2EEfYg&t=4470s",
+            dedication: "願以此持誦地藏王菩薩滅定業真言之功德，懺悔宿世業障，消除病苦災厄，迴向冤親債主離苦得樂，闔家平安吉祥。"
+        },
+        {
+            title: "南無阿彌陀佛",
+            ytUrl: "",
+            dedication: "願以此念佛功德，莊嚴佛淨土，上報四重恩，下濟三塗苦。若有見聞者，悉發菩提心，盡此一報身，同生極樂國。"
+        },
+        {
+            title: "大悲咒",
+            ytUrl: "",
+            dedication: "願以此持誦大悲神咒之功德，祈求觀世音菩薩慈悲加被，消災免難、身心康泰，迴向十方法界一切有情眾生同證菩提。"
+        }
+    ];
+    let chantPresetsList = [...DEFAULT_CHANT_PRESETS];
+
+    // 渲染常用經咒下拉選單
+    function renderChantPresetSelect() {
+        const selectEl = document.getElementById('chantPresetSelect');
+        if (!selectEl) return;
+        let html = '<option value="">-- 請選擇常用經咒（自動帶入連結與迴向文）--</option>';
+        chantPresetsList.forEach((item, idx) => {
+            html += `<option value="${idx}">📿 ${escapeHtml(item.title)}</option>`;
+        });
+        selectEl.innerHTML = html;
+    }
+
+    // 選擇下拉選單項目時，自動帶入「名稱 + YT連結 + 專屬迴向文」
+    function applyChantPreset() {
+        const selectEl = document.getElementById('chantPresetSelect');
+        const idx = selectEl.value;
+        if (idx === "") return;
+        const preset = chantPresetsList[Number(idx)];
+        if (!preset) return;
+
+        document.getElementById('chantNameInput').value = preset.title;
+        document.getElementById('chantYtUrlInput').value = preset.ytUrl || "";
+        if (preset.dedication) {
+            document.getElementById('chantDedicationInput').value = preset.dedication;
+        }
+        localStorage.setItem('ai_chant_name', preset.title);
+        localStorage.setItem('ai_chant_yt', preset.ytUrl || "");
+        localStorage.setItem('ai_chant_dedication', preset.dedication || "");
+    }
+
+    // 將目前輸入的「經咒名稱 + YT連結 + 迴向文」存為常用經咒（同步手機與試算表）
+    function saveCurrentAsChantPreset() {
+        const title = document.getElementById('chantNameInput').value.trim();
+        const ytUrl = document.getElementById('chantYtUrlInput').value.trim();
+        const dedication = document.getElementById('chantDedicationInput').value.trim();
+
+        if (!title) {
+            alert("請先輸入經咒名稱再儲存喔！");
+            return;
+        }
+
+        const existingIdx = chantPresetsList.findIndex(p => p.title === title);
+        const newPreset = { title, ytUrl, dedication };
+        if (existingIdx >= 0) {
+            chantPresetsList[existingIdx] = newPreset;
+        } else {
+            chantPresetsList.unshift(newPreset);
+        }
+        localStorage.setItem('ai_chant_presets_v1', JSON.stringify(chantPresetsList));
+        renderChantPresetSelect();
+
+        // 同步寫入雲端試算表「常用經咒設定」
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'saveChantPreset',
+                title: title,
+                ytUrl: ytUrl,
+                dedication: dedication
+            })
+        });
+
+        alert(`✅ 已將「${title}」加入常用經咒清單！\n下次可直接從上方下拉選單一鍵切換。`);
+    }
+
+    // 從雲端與本機載入常用經咒清單
+    async function loadChantPresets() {
+        const cached = localStorage.getItem('ai_chant_presets_v1');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    chantPresetsList = parsed;
+                }
+            } catch (e) {}
+        }
+        renderChantPresetSelect();
+
+        try {
+            const response = await fetch(`${GAS_WEB_APP_URL}?action=getChantPresets`);
+            const resJson = await response.json();
+            if (resJson && resJson.status === 'success' && Array.isArray(resJson.data) && resJson.data.length > 0) {
+                // 合併雲端與內建清單（雲端優先）
+                const merged = [...resJson.data];
+                DEFAULT_CHANT_PRESETS.forEach(def => {
+                    if (!merged.some(m => m.title === def.title)) {
+                        merged.push(def);
+                    }
+                });
+                chantPresetsList = merged;
+                localStorage.setItem('ai_chant_presets_v1', JSON.stringify(chantPresetsList));
+                renderChantPresetSelect();
+            }
+        } catch (err) {
+            console.log("讀取雲端常用經咒略過:", err);
+        }
+    }
+
+    // 載入上次儲存的經咒名稱、YT 連結與迴向文
     function loadSavedChantPrefs() {
         const savedName = localStorage.getItem('ai_chant_name');
         const savedUrl = localStorage.getItem('ai_chant_yt');
+        const savedDedication = localStorage.getItem('ai_chant_dedication');
         if (savedName) document.getElementById('chantNameInput').value = savedName;
         if (savedUrl) document.getElementById('chantYtUrlInput').value = savedUrl;
+        if (savedDedication) document.getElementById('chantDedicationInput').value = savedDedication;
     }
 
     // 1. 按下「聽取梵音學習」：播放 YouTube 聲音
@@ -2501,7 +2667,6 @@ resetToInitial();
         localStorage.setItem('ai_chant_yt', urlInput);
         localStorage.setItem('ai_chant_name', document.getElementById('chantNameInput').value.trim());
 
-        // 若願想音樂正在播放，先將狀態標記為關閉
         isWishMusicPlaying = false;
         updateMusicButtonUI();
 
@@ -2560,13 +2725,13 @@ resetToInitial();
         }
     }
 
-    // 4. 點擊撥珠計數 +1（若還沒計時會自動啟動計時）
+    // 4. 點擊撥珠計數 +1
     function incrementChantCount() {
         if (!isChantTiming) {
             toggleChantTimer();
         }
         chantCount++;
-        if (navigator.vibrate) navigator.vibrate(30); // 手機微幅震動回饋
+        if (navigator.vibrate) navigator.vibrate(30);
         updateChantDisplay();
     }
 
@@ -2590,7 +2755,21 @@ resetToInitial();
         document.getElementById('chantTimerDisplay').innerText = `${mins}:${secs}`;
     }
 
-        // 6. 儲存至 Google 試算表後台
+    // 彈出視窗的迴向文語音控制
+    let lastSpokenDedication = "";
+    function replayChantDedication() {
+        if (lastSpokenDedication) {
+            speak(lastSpokenDedication);
+        }
+    }
+    function closeChantCompleteModal() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        closeModal('chantCompleteModal');
+    }
+
+        // 6. 儲存至 Google 試算表後台 ＋ 跳出視窗並語音朗讀迴向文
     function saveChantRecord() {
         if (chantCount === 0 && chantSeconds === 0) {
             alert("目前還沒有唸誦次數或時間可以儲存喔！");
@@ -2598,8 +2777,15 @@ resetToInitial();
         }
         const title = document.getElementById('chantNameInput').value.trim() || "南無阿彌陀佛";
         const ytUrl = document.getElementById('chantYtUrlInput').value.trim();
+        const dedication = document.getElementById('chantDedicationInput').value.trim() ||
+            "願以此功德，莊嚴佛淨土，上報四重恩，下濟三塗苦。若有見聞者，悉發菩提心，盡此一報身，同生極樂國。";
+
         localStorage.setItem('ai_chant_name', title);
         if (ytUrl) localStorage.setItem('ai_chant_yt', ytUrl);
+        localStorage.setItem('ai_chant_dedication', dedication);
+
+        const finishedCount = chantCount;
+        const finishedSeconds = chantSeconds;
 
         const saveBtn = document.getElementById('saveChantBtn');
         saveBtn.innerText = "⏳ 正在寫入功德紀錄...";
@@ -2612,18 +2798,27 @@ resetToInitial();
             body: JSON.stringify({
                 mode: 'chant',
                 title: title,
-                count: chantCount,
-                seconds: chantSeconds,
-                ytUrl: ytUrl
+                count: finishedCount,
+                seconds: finishedSeconds,
+                ytUrl: ytUrl,
+                dedication: dedication
             })
         }).then(() => {
             saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
             saveBtn.disabled = false;
-            speak(`隨喜功德！已為您記錄${title}共${chantCount}遍，並推播迴向文至您的 LINE。`);
-            alert(`🙏 隨喜功德！\n已成功寫入後台並推播迴向文至 LINE：\n經咒名稱：${title}\n累計遍數：${chantCount} 遍`);
-            resetChantAll(true); // 儲存成功後自動歸零
+
+            // 顯示功德圓滿彈出視窗並語音恭讀迴向文
+            document.getElementById('modalChantSummary').innerText =
+                `📿 ${title} ｜ 圓滿 ${finishedCount} 遍（已同步試算表並推播 LINE）`;
+            document.getElementById('modalChantDedicationText').innerText = dedication;
+            document.getElementById('chantCompleteModal').style.display = 'flex';
+
+            lastSpokenDedication = `隨喜功德，已為您記錄${title}共${finishedCount}遍。現在為您恭讀迴向文：${dedication}`;
+            speak(lastSpokenDedication);
+
+            resetChantAll(true);
             setTimeout(() => {
-                fetchChantStats(); // 刷新下方今日/歷史累計清單
+                fetchChantStats();
             }, 1800);
         }).catch(() => {
             saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
@@ -2672,14 +2867,17 @@ resetToInitial();
             }
         }
     }
+
       
 window.addEventListener('DOMContentLoaded', () => {
-loadSavedChantPrefs();
-loadCachedSoulData();
-fetchAndRenderTodos();
-fetchSoulData();
-fetchChantStats();
+    loadChantPresets();
+    loadSavedChantPrefs();
+    loadCachedSoulData();
+    fetchAndRenderTodos();
+    fetchSoulData();
+    fetchChantStats();
 });
+
 </script>
 <!-- ✨ 全螢幕高清願景板與 369 沉浸練習視窗 -->
 <div class="fullscreen-vision-modal" id="fullscreenVisionModal" onclick="togglePurePhotoMode(event)">
