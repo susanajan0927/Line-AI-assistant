@@ -778,9 +778,57 @@
             line-height: 1.5;
             resize: vertical;
         }
-        /* 6 個底部導覽列字體微調 */
-        .nav-item { font-size: 0.72rem; }
-        .nav-item i { font-size: 1.12rem; }
+         /* 7 個底部導覽列字體微調 */
+        .nav-item { font-size: 0.68rem; }
+        .nav-item i { font-size: 1.08rem; }
+
+        /* ✨ 唸佛分頁專屬樣式 */
+        .chant-card {
+            background: linear-gradient(135deg, rgba(255, 251, 235, 0.96) 0%, rgba(254, 243, 199, 0.92) 100%);
+            border: 1px solid #fde68a;
+        }
+        .chant-input {
+            width: 100%;
+            border: 1.5px solid #fcd34d;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.92rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #78350f;
+            margin-top: 5px;
+        }
+        .chant-beads-btn {
+            width: 148px;
+            height: 148px;
+            border-radius: 50%;
+            margin: 14px auto;
+            background: radial-gradient(circle, #f59e0b 0%, #b45309 100%);
+            border: 4px solid #fef3c7;
+            color: #ffffff;
+            font-size: 1.25rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(180, 83, 9, 0.35);
+            transition: transform 0.1s ease;
+            user-select: none;
+        }
+        .chant-beads-btn:active {
+            transform: scale(0.93);
+        }
+        .chant-stat-pill {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid #fde68a;
+            border-radius: 16px;
+            padding: 10px;
+            text-align: center;
+            flex: 1;
+        }
+
         /* ✨ 願景板遮罩調淡，讓背景圖更清晰明亮 */
         .vision-board-overlay {
             background: linear-gradient(to bottom, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.42) 100%) !important;
@@ -1136,12 +1184,109 @@
             </div>
         </div>
     </div>
-    
+        <!-- ✨ 分頁 7：唸佛計數與梵音學習 -->
+    <div id="page-chant" class="page-section" style="display: none;">
+        <div class="card chant-card">
+            <div class="card-header">
+                <div class="card-title" style="color: #92400e;">
+                    <i class="fa-solid fa-hands-praying" style="color: #d97706; font-size: 1.2rem;"></i>
+                    <span>線上唸佛共修</span>
+                </div>
+                <span style="font-size: 0.78rem; background: #fde68a; color: #92400e; padding: 3px 10px; border-radius: 12px; font-weight: 700;">隨喜功德</span>
+            </div>
+
+            <!-- 經咒名稱與 YT 學習連結設定 -->
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+                <div>
+                    <label style="font-size: 0.84rem; font-weight: 700; color: #92400e;">📿 經咒／佛號名稱：</label>
+                    <input type="text" id="chantNameInput" class="chant-input" placeholder="例如：大悲咒、心經、南無阿彌陀佛" value="南無阿彌陀佛">
+                </div>
+                <div>
+                    <label style="font-size: 0.84rem; font-weight: 700; color: #92400e;">🎧 梵音學習 YouTube 連結（可選填）：</label>
+                    <input type="text" id="chantYtUrlInput" class="chant-input" placeholder="貼上 YouTube 唸誦學習網址...">
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 2px;">
+                    <button type="button" id="btnChantListen" class="action-btn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 10px; font-size: 0.88rem; flex: 1;" onclick="startChantYtListen()">
+                        🎧 聽取梵音學習
+                    </button>
+                    <button type="button" id="btnChantSelf" class="action-btn" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); padding: 10px; font-size: 0.88rem; flex: 1;" onclick="switchToSelfChant()">
+                        🙏 停止播放／自己唸
+                    </button>
+                </div>
+                <div id="chantYtStatus" style="font-size: 0.82rem; color: #b45309; text-align: center; display: none;"></div>
+            </div>
+
+            <!-- 計時與計數顯示區 -->
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <div class="chant-stat-pill">
+                    <div style="font-size: 0.78rem; color: #92400e; font-weight: 700;">⏱️ 累計時間</div>
+                    <div id="chantTimerDisplay" style="font-size: 1.45rem; font-weight: 800; color: #78350f; margin-top: 2px;">00:00</div>
+                </div>
+                <div class="chant-stat-pill">
+                    <div style="font-size: 0.78rem; color: #92400e; font-weight: 700;">🔢 累計遍數</div>
+                    <div style="font-size: 1.45rem; font-weight: 800; color: #b45309; margin-top: 2px;"><span id="chantCountDisplay">0</span> 遍</div>
+                </div>
+            </div>
+
+            <!-- 計時控制與歸零按鈕 -->
+            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 6px;">
+                <button type="button" id="chantTimerToggleBtn" onclick="toggleChantTimer()" style="background: #fff; border: 1.5px solid #f59e0b; color: #b45309; padding: 7px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                    ▶️ 開始計時
+                </button>
+                <button type="button" onclick="resetChantAll()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 7px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                    🔄 全部歸零
+                </button>
+            </div>
+
+            <!-- 大顆撥珠計數按鈕 -->
+            <button type="button" class="chant-beads-btn" onclick="incrementChantCount()">
+                <span>🙏 唸誦 +1</span>
+                <span style="font-size: 0.78rem; font-weight: 500; opacity: 0.9;">點擊撥珠計數</span>
+            </button>
+
+            <!-- 寫入後台按鈕 -->
+            <button type="button" id="saveChantBtn" class="action-btn" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); margin-top: 6px;" onclick="saveChantRecord()">
+                ☁️ 儲存本次唸佛功德紀錄
+            </button>
+        </div>
+
+        <!-- ✨ 今日與歷史唸佛累計統計清單（獨立在下方的新卡片） -->
+        <div class="card chant-card" style="margin-top: 2px;">
+            <div class="card-header">
+                <div class="card-title" style="color: #92400e;">
+                    <i class="fa-solid fa-scroll" style="color: #d97706; font-size: 1.15rem;"></i>
+                    <span>功德累計簿</span>
+                </div>
+                <button type="button" class="refresh-btn" style="background: #fef3c7; border-color: #fcd34d; color: #b45309;" onclick="fetchChantStats()" title="重新同步功德統計">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+
+            <!-- 總遍數雙格看板 -->
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="chant-stat-pill">
+                    <div style="font-size: 0.78rem; color: #92400e; font-weight: 700;">☀️ 今日累計</div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #b45309; margin-top: 2px;"><span id="chantTodayTotal">0</span> 遍</div>
+                </div>
+                <div class="chant-stat-pill">
+                    <div style="font-size: 0.78rem; color: #92400e; font-weight: 700;">🏛️ 歷史總累計</div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #78350f; margin-top: 2px;"><span id="chantAllTotal">0</span> 遍</div>
+                </div>
+            </div>
+
+           <!-- 各經咒明細清單 -->
+            <div style="font-size: 0.82rem; font-weight: 700; color: #92400e; margin-bottom: 6px;">📜 各部經咒持誦統計：</div>
+            <div id="chantBreakdownList" style="display: flex; flex-direction: column; gap: 8px;">
+                <p style="color: #b45309; font-size: 0.88rem; text-align: center; padding: 10px 0;">正在同步雲端功德紀錄...</p>
+            </div>
+        </div>
+    </div>          
     <nav class="bottom-nav">
         <a class="nav-item active" id="nav-home" onclick="switchTab('home', this)"><i class="fa-solid fa-house"></i><span>首頁</span></a>
         <a class="nav-item" id="nav-todo" onclick="switchTab('todo', this)"><i class="fa-regular fa-square-check"></i><span>待辦</span></a>
         <a class="nav-item" id="nav-gratitude" onclick="switchTab('gratitude', this)"><i class="fa-solid fa-heart"></i><span>感恩</span></a>
         <a class="nav-item" id="nav-wish" onclick="switchTab('wish', this)"><i class="fa-solid fa-wand-magic-sparkles"></i><span>願想</span></a>
+        <a class="nav-item" id="nav-chant" onclick="switchTab('chant', this)"><i class="fa-solid fa-hands-praying"></i><span>唸佛</span></a>
         <a class="nav-item" id="nav-stats" onclick="switchTab('stats', this)"><i class="fa-solid fa-chart-simple"></i><span>統計</span></a>
         <a class="nav-item" id="nav-settings" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i><span>設定</span></a>
     </nav>
@@ -1268,6 +1413,10 @@
         if (tabName === 'gratitude' || tabName === 'wish') {
             fetchSoulData();
         }
+        if (tabName === 'chant') {
+            fetchChantStats();
+        }
+
     }
 
     function switchTabByName(tabName) {
@@ -2326,10 +2475,210 @@ console.error(err);
 resetToInitial();
 });
 }
+    // ==================== ✨ 唸佛計數器、計時器與 YT 梵音學習 ====================
+    let chantCount = 0;
+    let chantSeconds = 0;
+    let chantTimerInterval = null;
+    let isChantTiming = false;
+    let isChantYtPlaying = false;
+
+    // 載入上次儲存的經咒名稱與 YT 連結
+    function loadSavedChantPrefs() {
+        const savedName = localStorage.getItem('ai_chant_name');
+        const savedUrl = localStorage.getItem('ai_chant_yt');
+        if (savedName) document.getElementById('chantNameInput').value = savedName;
+        if (savedUrl) document.getElementById('chantYtUrlInput').value = savedUrl;
+    }
+
+    // 1. 按下「聽取梵音學習」：播放 YouTube 聲音
+    function startChantYtListen() {
+        const urlInput = document.getElementById('chantYtUrlInput').value.trim();
+        const videoId = extractYouTubeVideoId(urlInput);
+        if (!videoId) {
+            alert("請先貼上正確的 YouTube 唸佛學習網址喔！");
+            return;
+        }
+        localStorage.setItem('ai_chant_yt', urlInput);
+        localStorage.setItem('ai_chant_name', document.getElementById('chantNameInput').value.trim());
+
+        // 若願想音樂正在播放，先將狀態標記為關閉
+        isWishMusicPlaying = false;
+        updateMusicButtonUI();
+
+        const statusEl = document.getElementById('chantYtStatus');
+        statusEl.style.display = 'block';
+        statusEl.innerText = "🎧 正在載入並播放梵音學習中...（聽熟後可按右側「停止播放／自己唸」）";
+
+        if (!ytPlayer && ytApiReady) {
+            ytPlayer = new YT.Player('ytAudioPlayer', {
+                height: '1',
+                width: '1',
+                videoId: videoId,
+                playerVars: { autoplay: 1, loop: 1, playlist: videoId, playsinline: 1 },
+                events: {
+                    onReady: function(e) {
+                        e.target.playVideo();
+                        isChantYtPlaying = true;
+                    }
+                }
+            });
+        } else if (ytPlayer) {
+            ytPlayer.loadVideoById({ videoId: videoId, startSeconds: 0 });
+            isChantYtPlaying = true;
+        }
+    }
+
+    // 2. 按下「停止播放／自己唸」：暫停 YT 並自動開始計時
+    function switchToSelfChant() {
+        if (ytPlayer && isChantYtPlaying) {
+            ytPlayer.pauseVideo();
+            isChantYtPlaying = false;
+        }
+        const statusEl = document.getElementById('chantYtStatus');
+        statusEl.style.display = 'block';
+        statusEl.innerText = "🙏 已切換為「自主持誦模式」，請點擊下方按鈕開始計數！";
+
+        if (!isChantTiming) {
+            toggleChantTimer();
+        }
+    }
+
+    // 3. 計時器開始／暫停
+    function toggleChantTimer() {
+        const btn = document.getElementById('chantTimerToggleBtn');
+        if (isChantTiming) {
+            clearInterval(chantTimerInterval);
+            isChantTiming = false;
+            btn.innerText = "▶️ 繼續計時";
+        } else {
+            isChantTiming = true;
+            btn.innerText = "⏸️ 暫停計時";
+            chantTimerInterval = setInterval(() => {
+                chantSeconds++;
+                updateChantDisplay();
+            }, 1000);
+        }
+    }
+
+    // 4. 點擊撥珠計數 +1（若還沒計時會自動啟動計時）
+    function incrementChantCount() {
+        if (!isChantTiming) {
+            toggleChantTimer();
+        }
+        chantCount++;
+        if (navigator.vibrate) navigator.vibrate(30); // 手機微幅震動回饋
+        updateChantDisplay();
+    }
+
+    // 5. 隨時按下全部歸零
+    function resetChantAll(skipConfirm) {
+        if (!skipConfirm && (chantCount > 0 || chantSeconds > 0)) {
+            if (!confirm("確定要將目前的唸誦次數與時間歸零嗎？")) return;
+        }
+        clearInterval(chantTimerInterval);
+        isChantTiming = false;
+        chantCount = 0;
+        chantSeconds = 0;
+        document.getElementById('chantTimerToggleBtn').innerText = "▶️ 開始計時";
+        updateChantDisplay();
+    }
+
+    function updateChantDisplay() {
+        document.getElementById('chantCountDisplay').innerText = chantCount;
+        const mins = String(Math.floor(chantSeconds / 60)).padStart(2, '0');
+        const secs = String(chantSeconds % 60).padStart(2, '0');
+        document.getElementById('chantTimerDisplay').innerText = `${mins}:${secs}`;
+    }
+
+        // 6. 儲存至 Google 試算表後台
+    function saveChantRecord() {
+        if (chantCount === 0 && chantSeconds === 0) {
+            alert("目前還沒有唸誦次數或時間可以儲存喔！");
+            return;
+        }
+        const title = document.getElementById('chantNameInput').value.trim() || "南無阿彌陀佛";
+        const ytUrl = document.getElementById('chantYtUrlInput').value.trim();
+        localStorage.setItem('ai_chant_name', title);
+        if (ytUrl) localStorage.setItem('ai_chant_yt', ytUrl);
+
+        const saveBtn = document.getElementById('saveChantBtn');
+        saveBtn.innerText = "⏳ 正在寫入功德紀錄...";
+        saveBtn.disabled = true;
+
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'chant',
+                title: title,
+                count: chantCount,
+                seconds: chantSeconds,
+                ytUrl: ytUrl
+            })
+        }).then(() => {
+            saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
+            saveBtn.disabled = false;
+            speak(`隨喜功德！已為您記錄${title}共${chantCount}遍，並推播迴向文至您的 LINE。`);
+            alert(`🙏 隨喜功德！\n已成功寫入後台並推播迴向文至 LINE：\n經咒名稱：${title}\n累計遍數：${chantCount} 遍`);
+            resetChantAll(true); // 儲存成功後自動歸零
+            setTimeout(() => {
+                fetchChantStats(); // 刷新下方今日/歷史累計清單
+            }, 1800);
+        }).catch(() => {
+            saveBtn.innerText = "☁️ 儲存本次唸佛功德紀錄";
+            saveBtn.disabled = false;
+            alert("儲存請求已送出，請稍後至試算表確認！");
+        });
+    }
+
+    // 7. 從試算表抓取今日與歷史累計遍數清單
+    async function fetchChantStats() {
+        const listEl = document.getElementById('chantBreakdownList');
+        if (listEl) {
+            listEl.innerHTML = '<p style="color: #b45309; font-size: 0.85rem; text-align: center; padding: 8px 0;">⏳ 正在讀取試算表統計...</p>';
+        }
+        try {
+            const response = await fetch(`${GAS_WEB_APP_URL}?action=getChantStats`);
+            const resJson = await response.json();
+            if (resJson && resJson.status === 'success' && resJson.data) {
+                const { todayTotal, allTotal, breakdown } = resJson.data;
+                document.getElementById('chantTodayTotal').innerText = Number(todayTotal).toLocaleString();
+                document.getElementById('chantAllTotal').innerText = Number(allTotal).toLocaleString();
+
+                if (!breakdown || breakdown.length === 0) {
+                    listEl.innerHTML = '<p style="color: #92400e; font-size: 0.88rem; text-align: center; padding: 10px 0;">尚無持誦紀錄，點擊上方開始第一遍共修吧！🙏</p>';
+                    return;
+                }
+
+                let html = '';
+                breakdown.forEach(item => {
+                    html += `
+                        <div style="background: rgba(255,255,255,0.88); border: 1px solid #fde68a; border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: 800; color: #78350f; font-size: 0.94rem;">📿 ${escapeHtml(item.title)}</div>
+                            <div style="text-align: right; font-size: 0.82rem; color: #92400e;">
+                                今日 <strong style="color:#d97706; font-size:0.92rem;">${Number(item.today).toLocaleString()}</strong> 遍 ｜ 
+                                累計 <strong style="color:#78350f; font-size:0.92rem;">${Number(item.all).toLocaleString()}</strong> 遍
+                            </div>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+            }
+        } catch (err) {
+            console.error("讀取唸佛統計失敗:", err);
+            if (listEl) {
+                listEl.innerHTML = '<p style="color: #b45309; font-size: 0.85rem; text-align: center;">⚠️ 暫時無法連線至雲端，請點擊右上角重新整理</p>';
+            }
+        }
+    }
+      
 window.addEventListener('DOMContentLoaded', () => {
+loadSavedChantPrefs();
 loadCachedSoulData();
 fetchAndRenderTodos();
 fetchSoulData();
+fetchChantStats();
 });
 </script>
 <!-- ✨ 全螢幕高清願景板與 369 沉浸練習視窗 -->
